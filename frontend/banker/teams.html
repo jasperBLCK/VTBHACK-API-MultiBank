@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Команды - Banker Portal</title>
+    <style id="sidebar-styles"></style>
+    <style>
+        /* Page-specific styles */
+        .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+        }
+
+        .team-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: all 0.2s;
+        }
+
+        .team-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .team-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .team-icon {
+            font-size: 36px;
+        }
+
+        .team-info h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .team-id {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        .team-details {
+            margin: 16px 0;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .detail-value {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .credentials {
+            background: var(--bg-primary);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .credentials-label {
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .credentials-value {
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            width: 100%;
+        }
+
+        .copy-btn:hover {
+            opacity: 0.9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            grid-column: 1 / -1;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        /* Button styles */
+        .btn-register {
+            padding: 10px 20px;
+            background: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-register:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+
+        /* Team card actions */
+        .team-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-suspend {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .btn-suspend:hover {
+            opacity: 0.9;
+        }
+
+        .btn-activate {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-activate:hover {
+            opacity: 0.9;
+        }
+
+        .btn-delete {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            opacity: 0.9;
+        }
+
+        .team-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        [data-theme="dark"] .status-active {
+            background: #064e3b;
+            color: #d1fae5;
+        }
+
+        [data-theme="dark"] .status-inactive {
+            background: #7f1d1d;
+            color: #fee2e2;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="top-bar">
+            <div class="top-bar-title">Команды участников</div>
+            <a href="/developer.html" target="_blank" class="btn-register">
+                🔗 Страница регистрации
+            </a>
+        </div>
+
+        <div class="content-area">
+            <div class="container">
+                <div class="teams-grid" id="teamsGrid">
+                    <div class="loading">Загрузка команд...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+    <script type="module">
+        import { applyTheme, toggleTheme } from '../client/theme-switcher.js';
+        import { initSidebar, sidebarStyles } from './sidebar.js';
+
+        // Apply styles
+        document.getElementById('sidebar-styles').textContent = sidebarStyles;
+        
+        // Initialize sidebar
+        initSidebar('teams');
+        
+        // Apply theme
+        applyTheme();
+
+        // Setup theme toggle
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            toggleTheme();
+            const isDark = localStorage.getItem('theme') === 'dark';
+            document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
+        });
+
+        // Update theme icon on load
+        const isDark = localStorage.getItem('theme') === 'dark';
+        document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
+    </script>
+
+    <script>
+        // Check authentication
+        const token = localStorage.getItem('banker_token');
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+
+        function getBaseUrl() {
+            const port = window.location.port;
+            return `http://localhost:${port}`;
+        }
+
+        // Load teams
+        async function loadTeams() {
+            try {
+                const baseUrl = getBaseUrl();
+                const response = await fetch(`${baseUrl}/admin/teams`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                renderTeams(data.teams || []);
+            } catch (error) {
+                console.error('Error loading teams:', error);
+                document.getElementById('teamsGrid').innerHTML = 
+                    '<div class="error">❌ Ошибка загрузки команд: ' + error.message + '</div>';
+            }
+        }
+
+        // Render teams
+        function renderTeams(teams) {
+            const grid = document.getElementById('teamsGrid');
+
+            if (!teams || teams.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👥</div>
+                        <h3>Нет зарегистрированных команд</h3>
+                        <p>Команды появятся после регистрации на <a href="/developer.html" target="_blank">/developer.html</a></p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = teams.map(team => {
+                const isActive = team.is_active !== false;
+                const statusClass = isActive ? 'status-active' : 'status-inactive';
+                const statusText = isActive ? '✓ Активна' : '⊗ Приостановлена';
+
+                return `
+                    <div class="team-card">
+                        <div class="team-header">
+                            <div class="team-icon">👨‍💼</div>
+                            <div class="team-info">
+                                <h3>${team.team_name || team.client_id}</h3>
+                                <div class="team-id">${team.client_id}</div>
+                                <span class="team-status ${statusClass}">${statusText}</span>
+                            </div>
+                        </div>
+
+                        <div class="team-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Контактная информация</span>
+                                <span class="detail-value">${team.team_name}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Дата регистрации</span>
+                                <span class="detail-value">${team.created_at ? new Date(team.created_at).toLocaleDateString('ru-RU') : '—'}</span>
+                            </div>
+                        </div>
+
+                        <div class="credentials">
+                            <div class="credentials-label">Client ID:</div>
+                            <div class="credentials-value">${team.client_id}</div>
+                            <div class="credentials-label" style="margin-top:8px;">Client Secret:</div>
+                            <div class="credentials-value">••••••••••••</div>
+                            <button class="copy-btn" onclick="copyCredentials('${team.client_id}', '${team.client_secret}')">
+                                📋 Копировать учетные данные
+                            </button>
+                        </div>
+
+                        <div class="team-actions">
+                            ${isActive ? 
+                                `<button class="btn-action btn-suspend" onclick="suspendTeam('${team.client_id}')">⏸ Приостановить</button>` :
+                                `<button class="btn-action btn-activate" onclick="activateTeam('${team.client_id}')">▶ Активировать</button>`
+                            }
+                            <button class="btn-action btn-delete" onclick="deleteTeam('${team.client_id}')">🗑️ Удалить</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Suspend team
+        window.suspendTeam = async function(clientId) {
+            if (!confirm(`Приостановить команду ${clientId}? Они не смогут делать запросы к API.`)) {
+                return;
+            }
+
+            try {
+                const baseUrl = getBaseUrl();
+                const response = await fetch(`${baseUrl}/admin/teams/${clientId}/suspend`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка приостановки');
+                }
+
+                alert('Команда приостановлена');
+                loadTeams();
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        };
+
+        // Activate team
+        window.activateTeam = async function(clientId) {
+            try {
+                const baseUrl = getBaseUrl();
+                const response = await fetch(`${baseUrl}/admin/teams/${clientId}/activate`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка активации');
+                }
+
+                alert('Команда активирована');
+                loadTeams();
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        };
+
+        // Delete team
+        window.deleteTeam = async function(clientId) {
+            if (!confirm(`УДАЛИТЬ команду ${clientId}? Это действие необратимо! Все тестовые клиенты команды также будут удалены.`)) {
+                return;
+            }
+
+            if (!confirm(`Вы уверены? Введите "${clientId}" для подтверждения.\n\n(Нажмите OK и введите в следующем окне)`)) {
+                return;
+            }
+
+            const confirmation = prompt(`Введите "${clientId}" для подтверждения удаления:`);
+            if (confirmation !== clientId) {
+                alert('Удаление отменено');
+                return;
+            }
+
+            try {
+                const baseUrl = getBaseUrl();
+                const response = await fetch(`${baseUrl}/admin/teams/${clientId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка удаления');
+                }
+
+                alert('Команда удалена');
+                loadTeams();
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        };
+
+        // Copy credentials
+        window.copyCredentials = function(clientId, clientSecret) {
+            const text = `Client ID: ${clientId}\nClient Secret: ${clientSecret}`;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Учетные данные скопированы в буфер обмена');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        };
+
+        // Initial load
+        loadTeams();
+    </script>
+</body>
+</html>

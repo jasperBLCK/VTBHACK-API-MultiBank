@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация команды - Bank API</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 580px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+            color: white;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        .header-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            display: inline-block;
+            animation: bounce 2s infinite;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.95;
+            font-weight: 400;
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 48px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .card-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .card-subtitle {
+            color: #6b7280;
+            margin-bottom: 36px;
+            font-size: 16px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .form-label .required {
+            color: #ef4444;
+            margin-left: 4px;
+        }
+
+        .form-label .optional {
+            color: #9ca3af;
+            font-weight: 400;
+            font-size: 13px;
+            margin-left: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .form-help {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 640px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 12px;
+            box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .btn-submit:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Success Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.75);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 48px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: scaleIn 0.3s ease-out;
+        }
+
+        .success-icon {
+            font-size: 80px;
+            text-align: center;
+            margin-bottom: 24px;
+            animation: bounce 1s ease-out;
+        }
+
+        .modal-title {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .credentials-box {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+
+        .credential-item {
+            margin-bottom: 20px;
+        }
+
+        .credential-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .credential-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .credential-value {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .credential-value code {
+            flex: 1;
+            background: white;
+            border: 1px solid #e5e7eb;
+            padding: 14px 16px;
+            border-radius: 10px;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+            color: #667eea;
+            word-break: break-all;
+            font-weight: 600;
+        }
+
+        .btn-copy {
+            padding: 10px 18px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .btn-copy:hover {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+
+        .btn-copy.copied {
+            background: #16a34a;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 24px 0;
+        }
+
+        .warning-box strong {
+            display: block;
+            color: #92400e;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .warning-box p {
+            color: #78350f;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .instructions {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 24px 0;
+        }
+
+        .instructions strong {
+            display: block;
+            color: #1e40af;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            color: #1e3a8a;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .instructions code {
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            color: #667eea;
+        }
+
+        .btn-close {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 24px;
+            transition: all 0.2s;
+        }
+
+        .btn-close:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 32px;
+            color: white;
+            opacity: 0.9;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: none;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            transition: all 0.2s;
+        }
+
+        .footer a:hover {
+            border-bottom-color: white;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .error-message {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        /* Link buttons hover effect */
+        .instructions a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .instructions a:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-icon">🏦</div>
+            <h1>Bank API</h1>
+            <p>Регистрация команды для доступа к API</p>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Создайте свою команду</h2>
+            <p class="card-subtitle">Получите учетные данные для работы с API банка и начните разработку</p>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label class="form-label">
+                        Название команды<span class="required">*</span>
+                    </label>
+                    <input type="text" class="form-input" name="team_name" required 
+                           placeholder="Например: Awesome Developers">
+                    <div class="form-help">Как называется ваша команда или проект?</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Client ID<span class="required">*</span>
+                    </label>
+                    <input type="text" class="form-input" name="client_id" required 
+                           placeholder="team201" pattern="team[0-9]+" maxlength="20">
+                    <div class="form-help">Уникальный идентификатор вашей команды. Формат: team + число (например, team201)</div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">
+                            Email<span class="optional">(опционально)</span>
+                        </label>
+                        <input type="email" class="form-input" name="email" 
+                               placeholder="team@example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Telegram<span class="optional">(опционально)</span>
+                        </label>
+                        <input type="text" class="form-input" name="telegram" 
+                               placeholder="@username">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Контактное лицо<span class="optional">(опционально)</span>
+                    </label>
+                    <input type="text" class="form-input" name="contact_person" 
+                           placeholder="Иван Иванов">
+                    <div class="form-help">Имя человека, ответственного за команду</div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    🚀 Зарегистрировать команду
+                </button>
+            </form>
+        </div>
+
+        <div class="footer">
+            <p>Нужна помощь? <a href="/docs" target="_blank">Документация API</a></p>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="success-icon">🎉</div>
+            <h2 class="modal-title">Команда успешно зарегистрирована!</h2>
+
+            <div class="credentials-box">
+                <div class="credential-item">
+                    <span class="credential-label">Client ID</span>
+                    <div class="credential-value">
+                        <code id="displayClientId"></code>
+                        <button class="btn-copy" onclick="copyToClipboard('displayClientId', this)">Копировать</button>
+                    </div>
+                </div>
+
+                <div class="credential-item">
+                    <span class="credential-label">Client Secret</span>
+                    <div class="credential-value">
+                        <code id="displayClientSecret"></code>
+                        <button class="btn-copy" onclick="copyToClipboard('displayClientSecret', this)">Копировать</button>
+                    </div>
+                </div>
+
+                <div class="credential-item">
+                    <span class="credential-label">Тестовые клиенты для UI</span>
+                    <div class="credential-value">
+                        <code id="displayTestClients"></code>
+                    </div>
+                </div>
+
+                <div class="credential-item">
+                    <span class="credential-label">Пароль для UI</span>
+                    <div class="credential-value">
+                        <code>password</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <strong>⚠️ Важно!</strong>
+                <p>Client Secret показывается только один раз. Обязательно сохраните его в безопасном месте. Без него вы не сможете делать межбанковские запросы.</p>
+            </div>
+
+            <div class="instructions">
+                <strong>📋 Следующие шаги:</strong>
+                <p id="nextStepsText" style="margin: 10px 0; font-size: 15px;">Сохраните Client ID и Client Secret в надежном месте</p>
+                
+                <div style="display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap;">
+                    <a id="linkUI" href="#" target="_blank" style="flex: 1; min-width: 200px; padding: 12px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; text-align: center; font-weight: 500; transition: transform 0.2s;">
+                        🏦 Открыть UI банка
+                    </a>
+                    <a id="linkAPIDocs" href="#" target="_blank" style="flex: 1; min-width: 200px; padding: 12px 20px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; text-decoration: none; border-radius: 8px; text-align: center; font-weight: 500; transition: transform 0.2s;">
+                        📚 Документация API
+                    </a>
+                </div>
+            </div>
+
+            <button class="btn-close" onclick="closeModal()">Понятно, начинаем!</button>
+        </div>
+    </div>
+
+    <script>
+        function getBaseUrl() {
+            const port = window.location.port;
+            return `http://localhost:${port}`;
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.classList.add('active');
+            setTimeout(() => {
+                errorEl.classList.remove('active');
+            }, 5000);
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const submitBtn = document.getElementById('submitBtn');
+            const formData = new FormData(form);
+            
+            const data = {
+                team_name: formData.get('team_name'),
+                client_id: formData.get('client_id')
+            };
+            
+            // Add optional fields only if they have values
+            const email = formData.get('email');
+            const telegram = formData.get('telegram');
+            const contactPerson = formData.get('contact_person');
+            
+            if (email && email.trim()) data.email = email.trim();
+            if (telegram && telegram.trim()) data.telegram = telegram.trim();
+            if (contactPerson && contactPerson.trim()) data.contact_person = contactPerson.trim();
+
+            // Disable button
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Регистрация...';
+
+            try {
+                const baseUrl = getBaseUrl();
+                const response = await fetch(`${baseUrl}/auth/register-team`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Ошибка регистрации');
+                }
+
+                const result = await response.json();
+                
+                // Show success modal
+                document.getElementById('displayClientId').textContent = result.credentials.client_id;
+                document.getElementById('displayClientSecret').textContent = result.credentials.client_secret;
+                document.getElementById('displayTestClients').textContent = 
+                    result.test_clients.slice(0, 3).join(', ') + ' ... ' + result.test_clients[result.test_clients.length - 1];
+                
+                // Update next steps and links
+                if (result.next_steps) {
+                    document.getElementById('nextStepsText').textContent = result.next_steps;
+                }
+                if (result.links) {
+                    document.getElementById('linkUI').href = result.links.ui;
+                    document.getElementById('linkAPIDocs').href = result.links.api_docs;
+                }
+                
+                document.getElementById('successModal').classList.add('active');
+                
+                // Reset form
+                form.reset();
+
+            } catch (error) {
+                console.error('Registration error:', error);
+                showError('Ошибка регистрации: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 Зарегистрировать команду';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('successModal').classList.remove('active');
+        }
+
+        function copyToClipboard(elementId, button) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = '✓ Скопировано';
+                button.classList.add('copied');
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Не удалось скопировать');
+            });
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Продукты - Banker Portal</title>
+    <style id="sidebar-styles"></style>
+    <style>
+        /* Page-specific styles */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+        }
+
+        .product-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: all 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+
+        .product-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .product-type {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .product-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        [data-theme="dark"] .status-active {
+            background: #064e3b;
+            color: #d1fae5;
+        }
+
+        [data-theme="dark"] .status-inactive {
+            background: #7f1d1d;
+            color: #fee2e2;
+        }
+
+        .product-details {
+            margin: 16px 0;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .detail-value {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="top-bar">
+            <div class="top-bar-title">Управление продуктами</div>
+        </div>
+
+        <div class="content-area">
+            <div class="container">
+                <div class="products-grid" id="productsGrid">
+                    <div class="loading">Загрузка продуктов...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Редактировать продукт</h2>
+            </div>
+            <form id="editForm">
+                <input type="hidden" id="editProductId">
+                
+                <div class="form-group">
+                    <label class="form-label">Название</label>
+                    <input type="text" class="form-input" id="editName" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Процентная ставка (%)</label>
+                    <input type="number" class="form-input" id="editRate" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Мин. сумма (₽)</label>
+                    <input type="number" class="form-input" id="editMinAmount" step="1000" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Макс. сумма (₽)</label>
+                    <input type="number" class="form-input" id="editMaxAmount" step="1000" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" id="editIsActive">
+                        <span>Продукт активен</span>
+                    </label>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { applyTheme, toggleTheme } from '../client/theme-switcher.js';
+        import { initSidebar, sidebarStyles } from './sidebar.js';
+
+        // Apply styles
+        document.getElementById('sidebar-styles').textContent = sidebarStyles;
+        
+        // Initialize sidebar
+        initSidebar('products');
+        
+        // Apply theme
+        applyTheme();
+
+        // Setup theme toggle
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            toggleTheme();
+            const isDark = localStorage.getItem('theme') === 'dark';
+            document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
+        });
+
+        // Update theme icon on load
+        const isDark = localStorage.getItem('theme') === 'dark';
+        document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
+    </script>
+
+    <script>
+        // Check authentication
+        const token = localStorage.getItem('banker_token');
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+
+        function getBaseUrl() {
+            const port = window.location.port;
+            return `http://localhost:${port}`;
+        }
+
+        // Load products
+        async function loadProducts() {
+            try {
+                const baseUrl = getBaseUrl();
+                const response = await fetch(`${baseUrl}/banker/products`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                renderProducts(data.products);
+            } catch (error) {
+                console.error('Error loading products:', error);
+                document.getElementById('productsGrid').innerHTML = 
+                    '<div class="error">❌ Ошибка загрузки продуктов: ' + error.message + '</div>';
+            }
+        }
+
+        // Render products
+        function renderProducts(products) {
+            const grid = document.getElementById('productsGrid');
+
+            if (!products || products.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <h3>Нет продуктов</h3>
+                        <p>Продукты банка не найдены</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = products.map(product => {
+                const isActive = product.is_active;
+                const typeIcons = {
+                    'DEPOSIT': '💰',
+                    'LOAN': '🏦',
+                    'CARD': '💳',
+                    'ACCOUNT': '📊'
+                };
+                const icon = typeIcons[product.type] || '📦';
+
+                return `
+                    <div class="product-card">
+                        <div class="product-header">
+                            <div>
+                                <div class="product-title">${icon} ${product.name}</div>
+                                <div class="product-type">${product.type}</div>
+                            </div>
+                            <span class="product-status ${isActive ? 'status-active' : 'status-inactive'}">
+                                ${isActive ? '✓ Активен' : '✗ Неактивен'}
+                            </span>
+                        </div>
+
+                        <div class="product-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Процентная ставка</span>
+                                <span class="detail-value">${product.interest_rate ? product.interest_rate + '%' : '—'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Мин. сумма</span>
+                                <span class="detail-value">${product.min_amount ? Number(product.min_amount).toLocaleString('ru-RU') + ' ₽' : '—'}</span>
+                            </div>
+                        </div>
+
+                        <div class="product-actions">
+                            <button class="btn btn-primary" onclick="editProduct('${product.product_id}')">
+                                ✏️ Редактировать
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Edit product
+        let currentProducts = [];
+        window.editProduct = function(productId) {
+            const product = currentProducts.find(p => p.product_id === productId);
+            if (!product) return;
+
+            document.getElementById('editProductId').value = product.product_id;
+            document.getElementById('editName').value = product.name;
+            document.getElementById('editRate').value = product.interest_rate || 0;
+            document.getElementById('editMinAmount').value = product.min_amount || 0;
+            document.getElementById('editMaxAmount').value = product.max_amount || 0;
+            document.getElementById('editIsActive').checked = product.is_active;
+
+            document.getElementById('editModal').classList.add('active');
+        };
+
+        window.closeEditModal = function() {
+            document.getElementById('editModal').classList.remove('active');
+        };
+
+        // Save product
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const productId = document.getElementById('editProductId').value;
+            const updateData = {
+                interest_rate: parseFloat(document.getElementById('editRate').value),
+                min_amount: parseFloat(document.getElementById('editMinAmount').value),
+                max_amount: parseFloat(document.getElementById('editMaxAmount').value),
+                is_active: document.getElementById('editIsActive').checked
+            };
+
+            try {
+                const baseUrl = getBaseUrl();
+                const response = await fetch(`${baseUrl}/banker/products/${productId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка обновления');
+                }
+
+                closeEditModal();
+                loadProducts();
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        });
+
+        // Initial load
+        async function init() {
+            const baseUrl = getBaseUrl();
+            const response = await fetch(`${baseUrl}/banker/products`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            currentProducts = data.products;
+            renderProducts(currentProducts);
+        }
+
+        init();
+    </script>
+</body>
+</html>

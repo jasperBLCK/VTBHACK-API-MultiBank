@@ -1,0 +1,132 @@
+/* Глобальные CSS переменные для тем */
+:root {
+    --bg-primary: #f5f7fa;
+    --bg-secondary: #ffffff;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --text-muted: #999999;
+    --border-color: #ddd;
+    --shadow: 0 2px 8px rgba(0,0,0,0.1);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,0.15);
+    
+    /* Bank colors */
+    --vbank-color: #667eea;
+    --abank-color: #e74c3c;
+    --sbank-color: #27ae60;
+    
+    /* Status colors */
+    --success-color: #2ecc71;
+    --error-color: #e74c3c;
+    --warning-color: #f39c12;
+    --info-color: #3498db;
+}
+
+/* Темная тема */
+body.dark {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --text-muted: #808080;
+    --border-color: #444;
+    --shadow: 0 2px 8px rgba(0,0,0,0.3);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+/* Применение переменных */
+body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background 0.3s, color 0.3s;
+}
+
+/* Базовые элементы */
+.container, .section, .card, .welcome {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+.header {
+    background: var(--bg-secondary) !important;
+    border-bottom: 1px solid var(--border-color);
+}
+
+input, select, textarea, button:not([onclick*="loadBank"]):not([onclick*="makePayment"]) {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+.account-card, .consent-card {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Bank Switcher в темной теме */
+body.dark [style*="position: fixed"][style*="bottom: 20px"][style*="right: 20px"] {
+    background: var(--bg-secondary) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+}
+
+body.dark [style*="position: fixed"][style*="bottom: 20px"] a {
+    background: var(--bg-secondary) !important;
+}
+
+body.dark [style*="position: fixed"][style*="bottom: 20px"] [style*="color: #666"] {
+    color: var(--text-secondary) !important;
+}
+
+/* Формы и блоки в темной теме */
+body.dark div[style*="background: white"] {
+    background: var(--bg-secondary) !important;
+}
+
+body.dark div[style*="background: #f8f9fa"],
+body.dark div[style*="background: #e7f3ff"] {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Inline стили с темными цветами в темной теме */
+body.dark [style*="color: #333"] {
+    color: var(--text-primary) !important;
+}
+
+body.dark [style*="color: #666"] {
+    color: var(--text-secondary) !important;
+}
+
+body.dark [style*="color: #999"] {
+    color: var(--text-muted) !important;
+}
+
+body.dark [style*="border: 1px solid #e0e0e0"],
+body.dark [style*="border-color: #e0e0e0"] {
+    border-color: var(--border-color) !important;
+}
+
+/* Таблицы и карточки */
+.transaction, .metadata {
+    color: var(--text-secondary) !important;
+}
+
+.client-id, .account-type, .account-number {
+    color: var(--text-muted) !important;
+}
+
+/* Результаты и уведомления */
+.result, .empty {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Тени */
+.section, .card, .account-card {
+    box-shadow: var(--shadow) !important;
+}
+
+.section:hover, .card:hover {
+    box-shadow: var(--shadow-hover) !important;
+}
+

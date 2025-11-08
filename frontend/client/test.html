@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестирование API - Bank Client</title>
+    <link rel="stylesheet" href="theme-styles.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { color: #333; margin-bottom: 30px; text-align: center; }
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h2 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
+        .test-group { margin-bottom: 20px; }
+        .test-title { font-weight: 600; color: #333; margin-bottom: 10px; }
+        button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover { background: #5568d3; }
+        button.success { background: #2ecc71; }
+        button.danger { background: #e74c3c; }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .result.success { border-color: #2ecc71; background: #d4edda; }
+        .result.error { border-color: #e74c3c; background: #f8d7da; }
+        .info { background: #e7f3ff; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тестирование API - HackAPI 2025</h1>
+        
+        <div class="info">
+            <strong>Банк:</strong> <span id="bankName">-</span> | 
+            <strong>Клиент:</strong> <span id="clientId">-</span> |
+            <strong>Токен:</strong> <span id="tokenStatus" class="badge badge-warning">Не авторизован</span>
+        </div>
+
+        <div class="grid">
+            <!-- Auth API -->
+            <div class="section">
+                <h2>🔐 Auth API</h2>
+                <div class="test-group">
+                    <div class="test-title">Авторизация</div>
+                    <button onclick="testLogin()">POST /auth/login</button>
+                    <div id="result-login" class="result" style="display:none;"></div>
+                </div>
+                <div class="test-group">
+                    <div class="test-title">Информация о клиенте</div>
+                    <button onclick="testMe()">GET /auth/me</button>
+                    <div id="result-me" class="result" style="display:none;"></div>
+                </div>
+            </div>
+
+            <!-- Accounts API -->
+            <div class="section">
+                <h2>💳 Accounts API</h2>
+                <div class="test-group">
+                    <div class="test-title">Список счетов</div>
+                    <button onclick="testAccounts()">GET /accounts</button>
+                    <div id="result-accounts" class="result" style="display:none;"></div>
+                </div>
+                <div class="test-group">
+                    <div class="test-title">Баланс первого счета</div>
+                    <button onclick="testBalance()">GET /accounts/acc-1/balances</button>
+                    <div id="result-balance" class="result" style="display:none;"></div>
+                </div>
+                <div class="test-group">
+                    <div class="test-title">Транзакции</div>
+                    <button onclick="testTransactions()">GET /accounts/acc-1/transactions</button>
+                    <div id="result-transactions" class="result" style="display:none;"></div>
+                </div>
+            </div>
+
+            <!-- Consents API -->
+            <div class="section">
+                <h2>🔐 Account-Consents API</h2>
+                <div class="test-group">
+                    <div class="test-title">Создать запрос на согласие</div>
+                    <button onclick="testCreateRequest()">POST /account-consents/request</button>
+                    <div id="result-create-request" class="result" style="display:none;"></div>
+                </div>
+                <div class="test-group">
+                    <div class="test-title">Просмотр запросов</div>
+                    <button onclick="testGetRequests()">GET /account-consents/requests</button>
+                    <div id="result-get-requests" class="result" style="display:none;"></div>
+                </div>
+                <div class="test-group">
+                    <div class="test-title">Мои согласия</div>
+                    <button onclick="testMyConsents()">GET /account-consents/my-consents</button>
+                    <div id="result-my-consents" class="result" style="display:none;"></div>
+                </div>
+            </div>
+
+            <!-- Payments API -->
+            <div class="section">
+                <h2>💸 Payments API</h2>
+                <div class="test-group">
+                    <div class="test-title">Создать платеж</div>
+                    <button onclick="testCreatePayment()" class="success">POST /payments</button>
+                    <div id="result-create-payment" class="result" style="display:none;"></div>
+                </div>
+                <div class="test-group">
+                    <div class="test-title">Статус платежа</div>
+                    <button onclick="testGetPayment()">GET /payments/{paymentId}</button>
+                    <div id="result-get-payment" class="result" style="display:none;"></div>
+                </div>
+            </div>
+
+            <!-- Admin API -->
+            <div class="section">
+                <h2>⚙️ Admin API</h2>
+                <div class="test-group">
+                    <div class="test-title">Капитал банков</div>
+                    <button onclick="testCapital()">GET /admin/capital</button>
+                    <div id="result-capital" class="result" style="display:none;"></div>
+                </div>
+                <div class="test-group">
+                    <div class="test-title">Статистика</div>
+                    <button onclick="testStats()">GET /admin/stats</button>
+                    <div id="result-stats" class="result" style="display:none;"></div>
+                </div>
+            </div>
+
+            <!-- Межбанковские запросы -->
+            <div class="section">
+                <h2>🔄 Межбанковские запросы</h2>
+                <div class="test-group">
+                    <div class="test-title">Запрос БЕЗ согласия (должен вернуть 403)</div>
+                    <button onclick="testWithoutConsent()" class="danger">GET /accounts (с X-Requesting-Bank)</button>
+                    <div id="result-without-consent" class="result" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📋 Массовый тест (запустить все)</h2>
+            <button onclick="runAll()" style="background: #f39c12; font-size: 16px; padding: 15px 30px;">
+                ▶️ Запустить все тесты
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const apiBase = window.location.origin;
+        let token = null;
+        let clientId = null;
+        let paymentId = null;
+
+        function showResult(id, data, success = true) {
+            const elem = document.getElementById(id);
+            elem.textContent = JSON.stringify(data, null, 2);
+            elem.className = success ? 'result success' : 'result error';
+            elem.style.display = 'block';
+        }
+
+        async function testLogin() {
+            try {
+                const response = await fetch(`${apiBase}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'cli-vb-001', password: 'password' })
+                });
+                const data = await response.json();
+                
+                if (data.access_token) {
+                    token = data.access_token;
+                    clientId = data.client_id;
+                    document.getElementById('clientId').textContent = clientId;
+                    document.getElementById('tokenStatus').textContent = 'Авторизован';
+                    document.getElementById('tokenStatus').className = 'badge badge-success';
+                }
+                
+                showResult('result-login', data, response.ok);
+            } catch (error) {
+                showResult('result-login', { error: error.message }, false);
+            }
+        }
+
+        async function testMe() {
+            try {
+                const response = await fetch(`${apiBase}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                showResult('result-me', data, response.ok);
+            } catch (error) {
+                showResult('result-me', { error: error.message }, false);
+            }
+        }
+
+        async function testAccounts() {
+            try {
+                const response = await fetch(`${apiBase}/accounts`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                showResult('result-accounts', data, response.ok);
+            } catch (error) {
+                showResult('result-accounts', { error: error.message }, false);
+            }
+        }
+
+        async function testBalance() {
+            try {
+                const response = await fetch(`${apiBase}/accounts/acc-1/balances`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                showResult('result-balance', data, response.ok);
+            } catch (error) {
+                showResult('result-balance', { error: error.message }, false);
+            }
+        }
+
+        async function testTransactions() {
+            try {
+                const response = await fetch(`${apiBase}/accounts/acc-1/transactions`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                showResult('result-transactions', data, response.ok);
+            } catch (error) {
+                showResult('result-transactions', { error: error.message }, false);
+            }
+        }
+
+        async function testCreateRequest() {
+            try {
+                const response = await fetch(`${apiBase}/account-consents/request`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        client_id: 'cli-vb-001',
+                        permissions: ['ReadAccountsDetail', 'ReadBalances'],
+                        reason: 'Test from UI',
+                        requesting_bank: 'testbank',
+                        requesting_bank_name: 'Test Bank'
+                    })
+                });
+                const data = await response.json();
+                showResult('result-create-request', data, response.ok);
+            } catch (error) {
+                showResult('result-create-request', { error: error.message }, false);
+            }
+        }
+
+        async function testGetRequests() {
+            try {
+                const response = await fetch(`${apiBase}/account-consents/requests`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                showResult('result-get-requests', data, response.ok);
+            } catch (error) {
+                showResult('result-get-requests', { error: error.message }, false);
+            }
+        }
+
+        async function testMyConsents() {
+            try {
+                const response = await fetch(`${apiBase}/account-consents/my-consents`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                showResult('result-my-consents', data, response.ok);
+            } catch (error) {
+                showResult('result-my-consents', { error: error.message }, false);
+            }
+        }
+
+        async function testCreatePayment() {
+            try {
+                const response = await fetch(`${apiBase}/payments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        data: {
+                            initiation: {
+                                instructedAmount: { amount: '100.00', currency: 'RUB' },
+                                debtorAccount: { identification: '40817810099910001001' },
+                                creditorAccount: { identification: '42301810099910001002' },
+                                remittanceInformation: { unstructured: 'Тестовый перевод' }
+                            }
+                        }
+                    })
+                });
+                const data = await response.json();
+                if (data.data && data.data.paymentId) {
+                    paymentId = data.data.paymentId;
+                }
+                showResult('result-create-payment', data, response.ok);
+            } catch (error) {
+                showResult('result-create-payment', { error: error.message }, false);
+            }
+        }
+
+        async function testGetPayment() {
+            if (!paymentId) {
+                showResult('result-get-payment', { error: 'Сначала создайте платеж' }, false);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${apiBase}/payments/${paymentId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                showResult('result-get-payment', data, response.ok);
+            } catch (error) {
+                showResult('result-get-payment', { error: error.message }, false);
+            }
+        }
+
+        async function testCapital() {
+            try {
+                const response = await fetch(`${apiBase}/admin/capital`);
+                const data = await response.json();
+                showResult('result-capital', data, response.ok);
+            } catch (error) {
+                showResult('result-capital', { error: error.message }, false);
+            }
+        }
+
+        async function testStats() {
+            try {
+                const response = await fetch(`${apiBase}/admin/stats`);
+                const data = await response.json();
+                showResult('result-stats', data, response.ok);
+            } catch (error) {
+                showResult('result-stats', { error: error.message }, false);
+            }
+        }
+
+        async function testWithoutConsent() {
+            try {
+                const response = await fetch(`${apiBase}/accounts?client_id=cli-vb-001`, {
+                    headers: { 'X-Requesting-Bank': 'testbank' }
+                });
+                const data = await response.json();
+                showResult('result-without-consent', data, !response.ok);
+            } catch (error) {
+                showResult('result-without-consent', { error: error.message }, false);
+            }
+        }
+
+        async function runAll() {
+            if (!confirm('Запустить все тесты по порядку?')) return;
+            
+            await testLogin();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await testMe();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await testAccounts();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await testBalance();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await testTransactions();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await testCreateRequest();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await testGetRequests();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await testMyConsents();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await testCreatePayment();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await testGetPayment();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await testCapital();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await testStats();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await testWithoutConsent();
+            
+            alert('✅ Все тесты завершены! Проверьте результаты ниже.');
+        }
+
+        // Определяем банк
+        const bankCode = window.location.port === '8001' ? 'vbank' :
+                        window.location.port === '8002' ? 'abank' :
+                        window.location.port === '8003' ? 'sbank' : 'vbank';
+        
+        const bankNames = {
+            'vbank': 'Virtual Bank',
+            'abank': 'Awesome Bank',
+            'sbank': 'Smart Bank'
+        };
+        
+        document.getElementById('bankName').textContent = bankNames[bankCode];
+    </script>
+    <script src="theme-switcher.js"></script>
+    
+    <!-- Bank Switcher Component (встроен) -->
+    <div style="position: fixed; bottom: 20px; right: 20px; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; width: 200px;">
+        <div style="font-size: 12px; color: #666; margin-bottom: 10px; font-weight: 600;">Перейти в другой банк:</div>
+        <a href="http://localhost:8001/client/" style="display: block; padding: 8px; margin-bottom: 8px; text-decoration: none; color: #667eea; border: 1px solid #667eea; border-radius: 5px; font-size: 13px; text-align: center;">🏦 Virtual Bank</a>
+        <a href="http://localhost:8002/client/" style="display: block; padding: 8px; margin-bottom: 8px; text-decoration: none; color: #e74c3c; border: 1px solid #e74c3c; border-radius: 5px; font-size: 13px; text-align: center;">🏦 Awesome Bank</a>
+        <a href="http://localhost:8003/client/" style="display: block; padding: 8px; text-decoration: none; color: #27ae60; border: 1px solid #27ae60; border-radius: 5px; font-size: 13px; text-align: center;">🏦 Smart Bank</a>
+    </div>
+</body>
+</html>
+

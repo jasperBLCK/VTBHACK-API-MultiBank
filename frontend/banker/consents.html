@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Согласия - Banker Portal</title>
+    <style id="sidebar-styles"></style>
+    <style>
+        /* Page-specific styles */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-box {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .consents-table-container {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .consents-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .consents-table th {
+            background: var(--bg-primary);
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
+            font-size: 14px;
+        }
+
+        .consents-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .consents-table tr:hover {
+            background: var(--bg-primary);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-AUTHORIZED { background: #d1fae5; color: #065f46; }
+        .status-PENDING { background: #fef3c7; color: #92400e; }
+        .status-REJECTED { background: #fee2e2; color: #991b1b; }
+        .status-REVOKED { background: #e5e7eb; color: #4b5563; }
+
+        [data-theme="dark"] .status-AUTHORIZED { background: #064e3b; color: #d1fae5; }
+        [data-theme="dark"] .status-PENDING { background: #78350f; color: #fef3c7; }
+        [data-theme="dark"] .status-REJECTED { background: #7f1d1d; color: #fee2e2; }
+        [data-theme="dark"] .status-REVOKED { background: #374151; color: #e5e7eb; }
+
+        .permissions-list {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .search-box {
+            margin-bottom: 24px;
+        }
+
+        .search-box input {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 15px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="top-bar">
+            <div class="top-bar-title">Управление согласиями</div>
+        </div>
+
+        <div class="content-area">
+            <div class="container">
+                <!-- Stats -->
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalConsents">—</div>
+                        <div class="stat-label">Всего согласий</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="authorizedConsents">—</div>
+                        <div class="stat-label">Авторизовано</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="pendingConsents">—</div>
+                        <div class="stat-label">В ожидании</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="revokedConsents">—</div>
+                        <div class="stat-label">Отозвано</div>
+                    </div>
+                </div>
+
+                <!-- Search -->
+                <div class="search-box">
+                    <input type="text" id="consentSearch" placeholder="🔍 Поиск по ID согласия или клиента...">
+                </div>
+
+                <!-- Consents Table -->
+                <div class="consents-table-container">
+                    <table class="consents-table">
+                        <thead>
+                            <tr>
+                                <th>ID Согласия</th>
+                                <th>Клиент</th>
+                                <th>Запрашивающий банк</th>
+                                <th>Права доступа</th>
+                                <th>Статус</th>
+                                <th>Создано</th>
+                                <th>Истекает</th>
+                            </tr>
+                        </thead>
+                        <tbody id="consentsTableBody">
+                            <tr>
+                                <td colspan="7" class="loading">Загрузка согласий...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { applyTheme, toggleTheme } from '../client/theme-switcher.js';
+        import { initSidebar, sidebarStyles } from './sidebar.js';
+
+        // Apply styles
+        document.getElementById('sidebar-styles').textContent = sidebarStyles;
+        
+        // Initialize sidebar
+        initSidebar('consents');
+        
+        // Apply theme
+        applyTheme();
+
+        // Setup theme toggle
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            toggleTheme();
+            const isDark = localStorage.getItem('theme') === 'dark';
+            document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
+        });
+
+        // Update theme icon on load
+        const isDark = localStorage.getItem('theme') === 'dark';
+        document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
+    </script>
+
+    <script>
+        // Check authentication
+        const token = localStorage.getItem('banker_token');
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+
+        function getBaseUrl() {
+            const port = window.location.port;
+            return `http://localhost:${port}`;
+        }
+
+        let allConsents = [];
+        let filteredConsents = [];
+
+        // Load consents
+        async function loadConsents() {
+            try {
+                const baseUrl = getBaseUrl();
+                const response = await fetch(`${baseUrl}/admin/consents`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                allConsents = data.consents || [];
+                filteredConsents = [...allConsents];
+                
+                updateStats();
+                renderConsents();
+            } catch (error) {
+                console.error('Error loading consents:', error);
+                document.getElementById('consentsTableBody').innerHTML = 
+                    `<tr><td colspan="7" class="error">❌ Ошибка загрузки: ${error.message}</td></tr>`;
+            }
+        }
+
+        // Update stats
+        function updateStats() {
+            document.getElementById('totalConsents').textContent = allConsents.length;
+            document.getElementById('authorizedConsents').textContent = 
+                allConsents.filter(c => c.status === 'AUTHORIZED').length;
+            document.getElementById('pendingConsents').textContent = 
+                allConsents.filter(c => c.status === 'PENDING').length;
+            document.getElementById('revokedConsents').textContent = 
+                allConsents.filter(c => c.status === 'REVOKED').length;
+        }
+
+        // Render consents
+        function renderConsents() {
+            const tbody = document.getElementById('consentsTableBody');
+
+            if (filteredConsents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted);">Согласия не найдены</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filteredConsents.map(consent => {
+                const permissions = consent.permissions || [];
+                const permissionsText = permissions.slice(0, 2).join(', ') + 
+                    (permissions.length > 2 ? ` +${permissions.length - 2}` : '');
+
+                return `
+                    <tr>
+                        <td><code style="font-size:12px;">${consent.consent_id.substring(0, 12)}...</code></td>
+                        <td><strong>${consent.client_id}</strong></td>
+                        <td>${consent.requesting_bank || '—'}</td>
+                        <td>
+                            <div>${permissionsText}</div>
+                            ${permissions.length > 2 ? `<div class="permissions-list">${permissions.join(', ')}</div>` : ''}
+                        </td>
+                        <td><span class="status-badge status-${consent.status}">${consent.status}</span></td>
+                        <td>${new Date(consent.created_at).toLocaleDateString('ru-RU')}</td>
+                        <td>${consent.expiration_date ? new Date(consent.expiration_date).toLocaleDateString('ru-RU') : '—'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Search
+        document.getElementById('consentSearch').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            
+            filteredConsents = allConsents.filter(consent => {
+                return consent.consent_id.toLowerCase().includes(searchTerm) ||
+                       consent.client_id.toLowerCase().includes(searchTerm) ||
+                       (consent.requesting_bank && consent.requesting_bank.toLowerCase().includes(searchTerm));
+            });
+
+            renderConsents();
+        });
+
+        // Initial load
+        loadConsents();
+    </script>
+</body>
+</html>

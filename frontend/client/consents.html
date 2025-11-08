@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Согласия</title>
+    <link rel="stylesheet" href="theme-styles.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary-color: #667eea;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --bg-app: #f5f7fa;
+            --bg-card: #ffffff;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --border-color: #e1e8ed;
+            --sidebar-width: 260px;
+            --header-height: 70px;
+        }
+        
+        body.dark {
+            --bg-app: #1a1a2e;
+            --bg-card: #16213e;
+            --text-primary: #eaeaea;
+            --text-secondary: #b4b4b4;
+            --border-color: #2d3748;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: var(--bg-app);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 100;
+        }
+        
+        .logo { font-size: 20px; font-weight: 700; color: var(--primary-color); }
+        .theme-toggle { padding: 8px; background: none; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; font-size: 18px; }
+        .logout { color: var(--danger-color); cursor: pointer; text-decoration: none; padding: 8px 16px; }
+        .sidebar {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            width: var(--sidebar-width);
+            height: calc(100vh - var(--header-height));
+            background: var(--bg-card);
+            border-right: 1px solid var(--border-color);
+            padding: 24px;
+            z-index: 90;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: all 0.15s;
+        }
+        
+        .nav-item:hover { background: var(--bg-app); color: var(--text-primary); }
+        .nav-item.active { background: linear-gradient(135deg, var(--primary-color), #5568d3); color: white; }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--header-height);
+            padding: 32px;
+        }
+        
+        .section {
+            background: var(--bg-card);
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+        h2 { color: var(--text-primary); margin-bottom: 20px; }
+        
+        @media (max-width: 1023px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-content { margin-left: 0; }
+        }
+        .consent-card {
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background: var(--bg-card);
+        }
+        .consent-card.active { border-left: 4px solid var(--success-color); }
+        .consent-card.pending { border-left: 4px solid var(--warning-color); }
+        .consent-card.revoked { border-left: 4px solid #95a5a6; }
+        .consent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        .bank-info { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-active { background: rgba(46, 204, 113, 0.2); color: var(--success-color); border: 1px solid var(--success-color); }
+        .status-pending { background: rgba(243, 156, 18, 0.2); color: var(--warning-color); border: 1px solid var(--warning-color); }
+        .status-revoked { background: rgba(149, 165, 166, 0.2); color: #95a5a6; border: 1px solid #95a5a6; }
+        .permissions {
+            margin: 10px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .permission-tag {
+            background: rgba(102, 126, 234, 0.15);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        body.dark .permission-tag {
+            background: rgba(102, 126, 234, 0.25);
+            color: #a5b4fc;
+        }
+        .reason { color: var(--text-secondary); font-size: 14px; font-style: italic; margin: 10px 0; }
+        .metadata { color: var(--text-secondary); font-size: 12px; margin-top: 10px; }
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        button {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .btn-approve { background: var(--success-color); color: white; }
+        .btn-approve:hover { background: #27ae60; opacity: 0.9; }
+        .btn-reject { background: var(--danger-color); color: white; }
+        .btn-reject:hover { background: #c0392b; opacity: 0.9; }
+        .btn-revoke { background: #95a5a6; color: white; }
+        .btn-revoke:hover { background: #7f8c8d; opacity: 0.9; }
+        .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        .empty-icon { font-size: 48px; margin-bottom: 10px; opacity: 0.5; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="#" class="logo" id="bankName">Bank</a>
+        <div style="display: flex; gap: 16px; align-items: center;">
+            <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+            <a href="#" class="logout" onclick="logout()">Выйти</a>
+        </div>
+    </header>
+
+    <aside class="sidebar">
+        <nav>
+            <a href="dashboard.html" class="nav-item">
+                <span style="font-size: 20px;">🏠</span>
+                <span>Главная</span>
+            </a>
+            <a href="dashboard.html#accounts" class="nav-item">
+                <span style="font-size: 20px;">💳</span>
+                <span>Мои счета</span>
+            </a>
+            <a href="dashboard.html#products" class="nav-item">
+                <span style="font-size: 20px;">📦</span>
+                <span>Продукты</span>
+            </a>
+            <a href="dashboard.html#transfers" class="nav-item">
+                <span style="font-size: 20px;">💸</span>
+                <span>Переводы</span>
+            </a>
+            <a href="consents.html" class="nav-item active">
+                <span style="font-size: 20px;">🔐</span>
+                <span>Согласия</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <div class="section">
+            <h2>🔔 Запросы на подписание</h2>
+            <div id="pendingRequests" class="loading">Загрузка...</div>
+        </div>
+
+        <div class="section">
+            <h2>🟢 Активные согласия</h2>
+            <div id="activeConsents" class="loading">Загрузка...</div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('access_token');
+        const clientId = localStorage.getItem('client_id');
+        const bankCode = localStorage.getItem('bank_code') || 'vbank';
+
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+
+        const bankNames = {
+            'vbank': 'Virtual Bank',
+            'abank': 'Awesome Bank',
+            'sbank': 'Smart Bank'
+        };
+        
+        document.getElementById('bankName').textContent = bankNames[bankCode];
+        const apiBase = window.location.origin;
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        async function loadPendingRequests() {
+            try {
+                const response = await fetch(`${apiBase}/account-consents/requests`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки запросов');
+                }
+
+                const data = await response.json();
+                displayPendingRequests(data.requests);
+
+            } catch (error) {
+                document.getElementById('pendingRequests').innerHTML = 
+                    `<div class="empty"><div class="empty-icon">❌</div>Ошибка: ${error.message}</div>`;
+            }
+        }
+
+        async function loadActiveConsents() {
+            try {
+                const response = await fetch(`${apiBase}/account-consents/my-consents`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки согласий');
+                }
+
+                const data = await response.json();
+                displayActiveConsents(data.consents);
+
+            } catch (error) {
+                document.getElementById('activeConsents').innerHTML = 
+                    `<div class="empty"><div class="empty-icon">❌</div>Ошибка: ${error.message}</div>`;
+            }
+        }
+
+        function displayPendingRequests(requests) {
+            const container = document.getElementById('pendingRequests');
+            
+            if (requests.length === 0) {
+                container.innerHTML = '<div class="empty"><div class="empty-icon">✅</div>Нет ожидающих запросов</div>';
+                return;
+            }
+
+            container.innerHTML = requests.map(req => `
+                <div class="consent-card pending">
+                    <div class="consent-header">
+                        <div class="bank-info">${req.requesting_bank_name || req.requesting_bank}</div>
+                        <span class="status-badge status-pending">Ожидает подписания</span>
+                    </div>
+                    <div class="permissions">
+                        ${req.permissions.map(p => `<span class="permission-tag">${p}</span>`).join('')}
+                    </div>
+                    ${req.reason ? `<div class="reason">Причина: ${req.reason}</div>` : ''}
+                    <div class="metadata">Создано: ${new Date(req.created_at).toLocaleString('ru-RU')}</div>
+                    <div class="actions">
+                        <button class="btn-approve" onclick="signConsent('${req.request_id}', 'approve')">
+                            ✓ Подписать
+                        </button>
+                        <button class="btn-reject" onclick="signConsent('${req.request_id}', 'reject')">
+                            ✗ Отклонить
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayActiveConsents(consents) {
+            const container = document.getElementById('activeConsents');
+            
+            if (consents.length === 0) {
+                container.innerHTML = '<div class="empty"><div class="empty-icon">📝</div>У вас нет активных согласий</div>';
+                return;
+            }
+
+            const active = consents.filter(c => c.status === 'Authorized' || c.status === 'active');
+            const revoked = consents.filter(c => c.status === 'Revoked' || c.status === 'revoked');
+
+            container.innerHTML = [
+                ...active.map(c => `
+                    <div class="consent-card active">
+                        <div class="consent-header">
+                            <div class="bank-info">${c.granted_to}</div>
+                            <span class="status-badge status-active">Активно</span>
+                        </div>
+                        <div class="permissions">
+                            ${c.permissions.map(p => `<span class="permission-tag">${p}</span>`).join('')}
+                        </div>
+                        <div class="metadata">
+                            <strong>ID:</strong> <code style="background: rgba(102, 126, 234, 0.1); padding: 2px 6px; border-radius: 3px; font-size: 11px;">${c.consent_id}</code><br>
+                            Подписано: ${c.signed_at ? new Date(c.signed_at).toLocaleString('ru-RU', {timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone}) : 'N/A'}<br>
+                            Истекает: ${c.expires_at ? new Date(c.expires_at).toLocaleString('ru-RU', {timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone}) : 'N/A'}
+                            ${c.last_accessed ? `<br>Последний доступ: ${new Date(c.last_accessed).toLocaleString('ru-RU', {timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone})}` : ''}
+                        </div>
+                        <div class="actions">
+                            <button class="btn-revoke" onclick="revokeConsent('${c.consent_id}')">
+                                Отозвать
+                            </button>
+                        </div>
+                    </div>
+                `),
+                ...revoked.map(c => `
+                    <div class="consent-card revoked">
+                        <div class="consent-header">
+                            <div class="bank-info">${c.granted_to}</div>
+                            <span class="status-badge status-revoked">Отозвано</span>
+                        </div>
+                        <div class="permissions">
+                            ${c.permissions.map(p => `<span class="permission-tag">${p}</span>`).join('')}
+                        </div>
+                        <div class="metadata">
+                            <strong>ID:</strong> <code style="background: rgba(149, 165, 166, 0.1); padding: 2px 6px; border-radius: 3px; font-size: 11px;">${c.consent_id}</code><br>
+                            Отозвано: ${c.revoked_at ? new Date(c.revoked_at).toLocaleString('ru-RU', {timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone}) : 'N/A'}
+                        </div>
+                    </div>
+                `)
+            ].join('');
+        }
+
+        async function signConsent(requestId, action) {
+            if (!confirm(action === 'approve' ? 'Подписать согласие?' : 'Отклонить запрос?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiBase}/account-consents/sign`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        request_id: requestId,
+                        action: action,
+                        signature: 'password'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка подписания');
+                }
+
+                alert(action === 'approve' ? 'Согласие подписано!' : 'Запрос отклонен');
+                
+                // Перезагрузить данные
+                await loadPendingRequests();
+                await loadActiveConsents();
+
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+        async function revokeConsent(consentId) {
+            if (!confirm('Отозвать согласие? Банк больше не сможет получать ваши данные.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiBase}/account-consents/my-consents/${consentId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка отзыва');
+                }
+
+                alert('Согласие отозвано');
+                
+                // Перезагрузить
+                await loadActiveConsents();
+
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+        // Загрузка при открытии страницы
+        Promise.all([loadPendingRequests(), loadActiveConsents()]);
+    </script>
+    <script src="theme-switcher.js"></script>
+    
+    <!-- Bank Switcher Component (встроен) -->
+    <div style="position: fixed; bottom: 20px; right: 20px; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; width: 200px;">
+        <div style="font-size: 12px; color: #666; margin-bottom: 10px; font-weight: 600;">Перейти в другой банк:</div>
+        <div id="bankSwitcher"></div>
+        <script>
+            (function() {
+                const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const getBankUrl = (code, port) => isDev ? `http://localhost:${port}` : `https://${code}.open.bankingapi.ru`;
+                const banks = [
+                    { code: 'vbank', name: 'Virtual Bank', port: '8001', color: '#667eea' },
+                    { code: 'abank', name: 'Awesome Bank', port: '8002', color: '#e74c3c' },
+                    { code: 'sbank', name: 'Smart Bank', port: '8003', color: '#27ae60' }
+                ];
+                document.getElementById('bankSwitcher').innerHTML = banks.map(b => 
+                    `<a href="${getBankUrl(b.code, b.port)}/client/" style="display: block; padding: 8px; margin-bottom: 8px; text-decoration: none; color: ${b.color}; border: 1px solid ${b.color}; border-radius: 5px; font-size: 13px; text-align: center;">🏦 ${b.name}</a>`
+                ).join('');
+            })();
+        </script>
+    </div>
+</body>
+</html>
+
