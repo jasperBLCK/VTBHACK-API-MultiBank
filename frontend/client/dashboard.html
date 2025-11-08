@@ -1,0 +1,2684 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет</title>
+    <link rel="stylesheet" href="theme-styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Colors */
+            --primary-color: #667eea;
+            --primary-dark: #5568d3;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --info-color: #3498db;
+            
+            /* Backgrounds */
+            --bg-app: #f5f7fa;
+            --bg-card: #ffffff;
+            --bg-hover: #f8f9fa;
+            
+            /* Text */
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --text-muted: #95a5a6;
+            
+            /* Borders */
+            --border-color: #e1e8ed;
+            --border-radius-sm: 8px;
+            --border-radius-md: 12px;
+            --border-radius-lg: 16px;
+            
+            /* Spacing */
+            --spacing-xs: 8px;
+            --spacing-sm: 12px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+            
+            /* Transitions */
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.3s ease;
+            
+            /* Sidebar */
+            --sidebar-width: 260px;
+            --header-height: 70px;
+        }
+
+        /* Dark theme */
+        body.dark {
+            --bg-app: #1a1a2e;
+            --bg-card: #16213e;
+            --bg-hover: #0f1729;
+            --text-primary: #eaeaea;
+            --text-secondary: #b4b4b4;
+            --text-muted: #858585;
+            --border-color: #2d3748;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.4);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.5);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: var(--bg-app);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: background var(--transition-normal), color var(--transition-normal);
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--spacing-lg);
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-primary);
+            padding: var(--spacing-sm);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--bg-hover);
+            border-radius: var(--border-radius-md);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .theme-toggle, .logout-btn {
+            padding: var(--spacing-sm);
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            font-size: 18px;
+            transition: all var(--transition-fast);
+            color: var(--text-primary);
+        }
+
+        .theme-toggle:hover, .logout-btn:hover {
+            background: var(--bg-hover);
+            transform: scale(1.05);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            width: var(--sidebar-width);
+            height: calc(100vh - var(--header-height));
+            background: var(--bg-card);
+            border-right: 1px solid var(--border-color);
+            padding: var(--spacing-lg);
+            overflow-y: auto;
+            transition: transform var(--transition-normal);
+            z-index: 90;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
+            border-radius: var(--border-radius-sm);
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            transition: all var(--transition-fast);
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--header-height);
+            padding: var(--spacing-xl);
+            min-height: calc(100vh - var(--header-height));
+        }
+
+        /* Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-normal);
+        }
+
+        .summary-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .summary-card.primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border: none;
+        }
+
+        .summary-card.primary .summary-label,
+        .summary-card.primary .summary-value {
+            color: white;
+        }
+
+        .summary-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-sm);
+            font-weight: 500;
+        }
+
+        .summary-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .summary-change {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Section */
+        .section {
+            background: var(--bg-card);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: var(--spacing-sm) var(--spacing-lg);
+            border: none;
+            border-radius: var(--border-radius-sm);
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-lg);
+            transition: all var(--transition-normal);
+            cursor: pointer;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .card-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .card-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: 'Courier New', monospace;
+        }
+
+        .card-balance {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--success-color);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .transaction-list {
+            margin-top: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-sm) 0;
+            font-size: 13px;
+        }
+
+        .transaction-desc {
+            color: var(--text-secondary);
+        }
+
+        .transaction-amount {
+            font-weight: 600;
+        }
+
+        .transaction-amount.credit {
+            color: var(--success-color);
+        }
+
+        .transaction-amount.debit {
+            color: var(--danger-color);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-xl);
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-muted);
+            line-height: 1;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+        }
+
+        .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: var(--spacing-sm);
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            font-size: 14px;
+            background: var(--bg-app);
+            color: var(--text-primary);
+            transition: border-color var(--transition-fast);
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: var(--spacing-xs);
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            top: calc(var(--header-height) + var(--spacing-lg));
+            right: var(--spacing-lg);
+            background: var(--bg-card);
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--primary-color);
+            z-index: 2000;
+            animation: slideInRight 0.3s ease;
+            max-width: 400px;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .toast.success { border-left-color: var(--success-color); }
+        .toast.error { border-left-color: var(--danger-color); }
+        .toast.info { border-left-color: var(--info-color); }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .toast-message {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Loading skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-app) 50%, var(--bg-hover) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s ease-in-out infinite;
+            border-radius: var(--border-radius-sm);
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .skeleton-card {
+            height: 200px;
+            border-radius: var(--border-radius-md);
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-xl) var(--spacing-lg);
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: var(--spacing-md);
+            opacity: 0.5;
+        }
+
+        /* Mobile Bottom Nav */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-color);
+            padding: var(--spacing-sm) 0;
+            z-index: 100;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+
+        .bottom-nav-items {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: var(--spacing-sm);
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 11px;
+            transition: color var(--transition-fast);
+            flex: 1;
+        }
+
+        .bottom-nav-item.active {
+            color: var(--primary-color);
+        }
+
+        .bottom-nav-icon {
+            font-size: 22px;
+        }
+
+        /* Products grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        .product-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            padding: var(--spacing-lg);
+            transition: all var(--transition-normal);
+        }
+
+        .product-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .product-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .product-badge.deposit {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .product-badge.loan {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .product-badge.card {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        body.dark .product-badge.deposit { background: #1b5e20; color: #81c784; }
+        body.dark .product-badge.loan { background: #e65100; color: #ffb74d; }
+        body.dark .product-badge.card { background: #0d47a1; color: #64b5f6; }
+
+        .product-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .product-amount {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--success-color);
+            margin: var(--spacing-md) 0;
+        }
+
+        .product-info {
+            display: flex;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .product-info-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--bg-hover);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: var(--spacing-sm) 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+            transition: width var(--transition-normal);
+        }
+
+        /* Transfer form */
+        .transfer-form {
+            display: grid;
+            grid-template-columns: 2fr 2fr 1fr auto;
+            gap: var(--spacing-md);
+            align-items: end;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 1023px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .transfer-form {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .header {
+                padding: 0 var(--spacing-md);
+            }
+
+            .user-name {
+                display: none;
+            }
+
+            .main-content {
+                padding: var(--spacing-lg);
+                padding-bottom: 80px;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+                gap: var(--spacing-md);
+            }
+
+            .cards-grid, .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .bottom-nav {
+                display: block;
+            }
+
+            .section {
+                padding: var(--spacing-lg);
+            }
+        }
+
+        /* Utility classes */
+        .hidden { display: none !important; }
+        .loading { opacity: 0.6; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+            <a href="#" class="logo" id="bankLogo">Bank</a>
+        </div>
+        <div class="header-right">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">И</div>
+                <span class="user-name" id="userName">Клиент</span>
+    </div>
+            <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+            <button class="logout-btn" onclick="logout()" title="Выйти">🚪</button>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <nav>
+            <a href="#overview" class="nav-item active" onclick="showSection('overview')">
+                <span class="nav-icon">🏠</span>
+                <span>Главная</span>
+            </a>
+            <a href="#accounts" class="nav-item" onclick="showSection('accounts')">
+                <span class="nav-icon">💳</span>
+                <span>Мои счета</span>
+            </a>
+            <a href="#products" class="nav-item" onclick="showSection('products')">
+                <span class="nav-icon">📦</span>
+                <span>Продукты</span>
+            </a>
+            <a href="#transfers" class="nav-item" onclick="showSection('transfers')">
+                <span class="nav-icon">💸</span>
+                <span>Переводы</span>
+            </a>
+            <a href="#history" class="nav-item" onclick="showSection('history')">
+                <span class="nav-icon">📊</span>
+                <span>История</span>
+            </a>
+            <a href="consents.html" class="nav-item">
+                <span class="nav-icon">🔐</span>
+                <span>Согласия</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+            <div class="summary-card primary">
+                <div class="summary-label">Общий баланс</div>
+                <div class="summary-value" id="totalBalance">0 ₽</div>
+                <div class="summary-change">Во всех счетах</div>
+                </div>
+            <div class="summary-card">
+                <div class="summary-label">Мои счета</div>
+                <div class="summary-value" id="accountsCount">0</div>
+                <div class="summary-change">Активных</div>
+                </div>
+            <div class="summary-card">
+                <div class="summary-label">Продукты</div>
+                <div class="summary-value" id="productsCount">0</div>
+                <div class="summary-change">Активных договоров</div>
+                </div>
+            <div class="summary-card">
+                <div class="summary-label">Переводы</div>
+                <div class="summary-value" id="transfersCount">—</div>
+                <div class="summary-change">За месяц</div>
+            </div>
+        </div>
+
+        <!-- Accounts Section -->
+        <section class="section" id="section-accounts">
+            <div class="section-header">
+                <h2 class="section-title">💳 Мои счета</h2>
+                <button class="btn btn-primary" onclick="openNewAccountModal()">
+                    <span>+</span>
+                    <span>Открыть счет</span>
+                </button>
+            </div>
+            <div id="accountsLoading" class="cards-grid">
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
+        </div>
+            <div id="accountsGrid" class="cards-grid hidden"></div>
+            <div id="accountsEmpty" class="empty-state hidden">
+                <div class="empty-icon">💳</div>
+                <div>У вас пока нет счетов</div>
+                <button class="btn btn-primary" style="margin-top: var(--spacing-md);" onclick="openNewAccountModal()">Открыть первый счет</button>
+            </div>
+        </section>
+
+        <!-- Products Section -->
+        <section class="section" id="section-products">
+            <div class="section-header">
+                <h2 class="section-title">📦 Мои продукты</h2>
+                <button class="btn btn-primary" onclick="openProductModal()">
+                    <span>+</span>
+                    <span>Открыть продукт</span>
+                </button>
+            </div>
+            <div id="productsLoading" class="products-grid">
+                <div class="skeleton skeleton-card"></div>
+        </div>
+            <div id="productAgreements" class="products-grid hidden"></div>
+            <div id="productsEmpty" class="empty-state hidden">
+                <div class="empty-icon">📦</div>
+                <div>У вас нет активных продуктов</div>
+                <button class="btn btn-primary" style="margin-top: var(--spacing-md);" onclick="openProductModal()">Открыть продукт</button>
+            </div>
+        </section>
+
+        <!-- Transfers Section -->
+        <section class="section" id="section-transfers">
+            <div class="section-header">
+                <h2 class="section-title">💸 Переводы</h2>
+            </div>
+            <div class="transfer-form">
+                <div class="form-group" style="margin: 0;">
+                    <label class="form-label">Откуда</label>
+                    <input type="text" class="form-input" id="fromAccount" placeholder="Номер счета">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label class="form-label">Куда</label>
+                    <input type="text" class="form-input" id="toAccount" placeholder="Номер счета">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label class="form-label">Сумма (₽)</label>
+                    <input type="number" class="form-input" id="amount" placeholder="1000">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-primary" onclick="makePayment()" style="width: 100%;">Перевести</button>
+                </div>
+            </div>
+            <div id="paymentResult" class="hidden" style="margin-top: var(--spacing-md); padding: var(--spacing-md); border-radius: var(--border-radius-sm);"></div>
+        </section>
+
+        <!-- Transactions History Section -->
+        <section class="section" id="section-history">
+            <div class="section-header">
+                <h2 class="section-title">📊 История операций</h2>
+            </div>
+            <div style="display: flex; gap: var(--spacing-md); margin-bottom: var(--spacing-lg); flex-wrap: wrap;">
+                <div class="form-group" style="margin: 0; flex: 1; min-width: 200px;">
+                    <label class="form-label">Счет</label>
+                    <select id="filterAccount" class="form-select" onchange="filterTransactions()">
+                        <option value="">Все счета</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin: 0; flex: 1; min-width: 150px;">
+                    <label class="form-label">Тип</label>
+                    <select id="filterType" class="form-select" onchange="filterTransactions()">
+                        <option value="">Все</option>
+                        <option value="credit">Пополнения</option>
+                        <option value="debit">Списания</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin: 0; flex: 1; min-width: 150px;">
+                    <label class="form-label">Период</label>
+                    <select id="filterPeriod" class="form-select" onchange="filterTransactions()">
+                        <option value="all">Все время</option>
+                        <option value="today">Сегодня</option>
+                        <option value="week">Неделя</option>
+                        <option value="month">Месяц</option>
+                    </select>
+                </div>
+            </div>
+            <div id="transactionsTableContainer" style="overflow-x: auto;">
+                <div style="text-align: center; padding: var(--spacing-xl); color: var(--text-muted);">
+                    Загрузка операций...
+                </div>
+            </div>
+        </section>
+
+        <!-- Multibank Section -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">🌐 Мультибанк</h2>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: var(--spacing-sm);">Загрузите счета из других банков</p>
+            <div style="display: flex; gap: var(--spacing-sm); flex-wrap: wrap; margin-bottom: var(--spacing-lg);">
+                <button class="btn btn-secondary" onclick="loadBankAccounts('vbank', 'https://vbank.open.bankingapi.ru', 'Virtual Bank')">🏦 Virtual Bank</button>
+                <button class="btn btn-secondary" onclick="loadBankAccounts('abank', 'https://abank.open.bankingapi.ru', 'Awesome Bank')">🏦 Awesome Bank</button>
+                <button class="btn btn-secondary" onclick="loadBankAccounts('sbank', 'https://sbank.open.bankingapi.ru', 'Smart Bank')">🏦 Smart Bank</button>
+                <button class="btn btn-primary" onclick="loadAllBanks()">🔄 Загрузить все</button>
+            </div>
+            <div id="multibankAccounts"></div>
+        </section>
+    </main>
+
+    <!-- Bottom Navigation (Mobile) -->
+    <nav class="bottom-nav">
+        <div class="bottom-nav-items">
+            <a href="#overview" class="bottom-nav-item active" onclick="showSection('overview')">
+                <span class="bottom-nav-icon">🏠</span>
+                <span>Главная</span>
+            </a>
+            <a href="#accounts" class="bottom-nav-item" onclick="showSection('accounts')">
+                <span class="bottom-nav-icon">💳</span>
+                <span>Счета</span>
+            </a>
+            <a href="#products" class="bottom-nav-item" onclick="showSection('products')">
+                <span class="bottom-nav-icon">📦</span>
+                <span>Продукты</span>
+            </a>
+            <a href="#transfers" class="bottom-nav-item" onclick="showSection('transfers')">
+                <span class="bottom-nav-icon">💸</span>
+                <span>Переводы</span>
+            </a>
+            <a href="consents.html" class="bottom-nav-item">
+                <span class="bottom-nav-icon">🔐</span>
+                <span>Еще</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- New Account Modal -->
+    <div id="newAccountModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Открыть новый счет</h3>
+                <button class="close-btn" onclick="closeNewAccountModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Тип счета</label>
+                <select id="newAccountType" class="form-select">
+                    <option value="checking">Текущий счет</option>
+                    <option value="savings">Сберегательный счет</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Начальный баланс</label>
+                <input type="number" id="newAccountBalance" class="form-input" value="0" readonly disabled>
+                <div class="form-hint">Новые счета создаются с балансом 0 ₽. Пополните счет после создания.</div>
+            </div>
+            <button class="btn btn-primary" onclick="createNewAccount()" style="width: 100%;">Открыть счет</button>
+        </div>
+    </div>
+
+    <!-- Close Account with Balance Modal -->
+    <div id="closeAccountModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Закрытие счета</h3>
+                <button class="close-btn" onclick="closeCloseAccountModal()">&times;</button>
+            </div>
+            <div style="padding: var(--spacing-md); background: var(--bg-hover); border-radius: var(--border-radius-sm); margin-bottom: var(--spacing-md);">
+                <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: var(--spacing-sm);">На счете</div>
+                <div style="font-size: 24px; font-weight: 700; color: var(--success-color);" id="closeAccountBalance">0 ₽</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: var(--spacing-xs);" id="closeAccountNumber"></div>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: var(--spacing-lg);">Что сделать с остатком средств?</p>
+            <div class="form-group">
+                <label class="form-label">Перевести на счет</label>
+                <select id="destinationAccount" class="form-select">
+                    <option value="">-- Выберите счет --</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: var(--spacing-sm);">
+                <button class="btn btn-primary" onclick="closeAccountWithTransfer()" style="flex: 1;">Перевести и закрыть</button>
+                <button class="btn btn-danger" onclick="closeAccountWithDonation()">Подарить банку</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Close Loan Modal -->
+    <div id="closeLoanModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Погашение кредита</h3>
+                <button class="close-btn" onclick="closeCloseLoanModal()">&times;</button>
+            </div>
+            <div style="padding: var(--spacing-md); background: #fee; border-radius: var(--border-radius-sm); margin-bottom: var(--spacing-md); border-left: 4px solid var(--danger-color);">
+                <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: var(--spacing-sm);">Задолженность</div>
+                <div style="font-size: 28px; font-weight: 700; color: var(--danger-color);" id="loanDebt">0 ₽</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: var(--spacing-xs);" id="loanProductName"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Погасить из счета</label>
+                <select id="repaymentAccount" class="form-select" onchange="checkRepaymentFunds()">
+                    <option value="">-- Выберите счет --</option>
+                </select>
+                <div id="repaymentBalanceInfo" class="form-hint" style="margin-top: var(--spacing-sm);"></div>
+            </div>
+            <div id="insufficientRepayment" class="hidden" style="padding: var(--spacing-md); background: #fee; color: #c00; border-radius: var(--border-radius-sm); margin-bottom: var(--spacing-md);">
+                ❌ Недостаточно средств для погашения
+            </div>
+            <button class="btn btn-primary" id="repayLoanBtn" onclick="repayAndCloseLoan()" style="width: 100%;">Погасить и закрыть</button>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Открыть продукт</h3>
+                <button class="close-btn" onclick="closeProductModal()">&times;</button>
+            </div>
+            <div id="productsLoader" style="text-align: center; padding: var(--spacing-lg); color: var(--text-muted);">Загрузка продуктов...</div>
+            <div id="productsList" class="hidden">
+                <div class="form-group">
+                    <label class="form-label">Выберите продукт</label>
+                    <select id="selectedProduct" class="form-select" onchange="updateProductDetails()">
+                        <option value="">-- Выберите --</option>
+                    </select>
+                </div>
+                <div id="productDetails" class="hidden" style="padding: var(--spacing-md); background: var(--bg-hover); border-radius: var(--border-radius-sm); margin-bottom: var(--spacing-md);">
+                    <div style="margin-bottom: var(--spacing-sm);">
+                        <strong>Процентная ставка:</strong> <span id="productRate"></span>%
+                    </div>
+                    <div>
+                        <strong>Минимальная сумма:</strong> <span id="productMinAmount"></span> ₽
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Сумма (₽)</label>
+                    <input type="number" id="productAmount" class="form-input" placeholder="10000" onchange="checkAvailableFunds()">
+                </div>
+                <div id="sourceAccountGroup" class="form-group hidden">
+                    <label class="form-label">Пополнить из счета</label>
+                    <select id="sourceAccount" class="form-select" onchange="checkAvailableFunds()">
+                        <option value="">-- Выберите счет --</option>
+                    </select>
+                    <div id="balanceInfo" class="form-hint" style="margin-top: var(--spacing-sm);"></div>
+                </div>
+                <div id="insufficientFunds" class="hidden" style="padding: var(--spacing-md); background: #fee; color: #c00; border-radius: var(--border-radius-sm); margin-bottom: var(--spacing-md);">
+                    ❌ Недостаточно средств на счете
+                </div>
+                <button class="btn btn-primary" id="createAgreementBtn" onclick="createAgreement()" style="width: 100%;">Открыть</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme management (встроенная, вместо theme-switcher.js)
+        function toggleTheme() {
+            const body = document.body;
+            const button = document.querySelector('.theme-toggle');
+            
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                button.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.classList.add('dark');
+                button.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark');
+            const button = document.querySelector('.theme-toggle');
+            if (button) button.textContent = '☀️';
+        }
+    </script>
+    <script>
+        // Auth check
+        const token = localStorage.getItem('access_token');
+        const clientId = localStorage.getItem('client_id');
+        const bankCode = localStorage.getItem('bank_code') || 'vbank';
+
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+        
+        const bankNames = {
+            'vbank': 'Virtual Bank',
+            'abank': 'Awesome Bank',
+            'sbank': 'Smart Bank'
+        };
+        
+        const apiBase = window.location.origin;
+
+        // Update UI with user info
+        document.getElementById('bankLogo').textContent = bankNames[bankCode];
+        document.getElementById('userName').textContent = clientId;
+        document.getElementById('userAvatar').textContent = clientId.charAt(4).toUpperCase();
+
+        // Navigation
+        function showSection(section) {
+            // Update nav active state
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelectorAll('.bottom-nav-item').forEach(item => item.classList.remove('active'));
+            
+            event.target.closest('.nav-item, .bottom-nav-item')?.classList.add('active');
+            
+            // Smooth scroll to section
+            const targetSection = document.getElementById(`section-${section}`);
+            if (targetSection) {
+                targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            
+            // Close sidebar on mobile
+            if (window.innerWidth < 1024) {
+                document.getElementById('sidebar').classList.remove('active');
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // Toast notification
+        function showToast(message, type = 'info', title = '') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                ${title ? `<div class="toast-title">${title}</div>` : ''}
+                <div class="toast-message">${message}</div>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideInRight 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Load data and update summary
+        let accountsData = [];
+        let productsData = [];
+
+        async function loadAccounts() {
+            try {
+                const response = await fetch(`${apiBase}/accounts`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Ошибка загрузки счетов');
+
+                const data = await response.json();
+                accountsData = data.data.account;
+                
+                await displayAccounts(accountsData);
+                updateSummary();
+
+            } catch (error) {
+                console.error('Error loading accounts:', error);
+                showToast(error.message, 'error', 'Ошибка');
+            }
+        }
+
+        async function displayAccounts(accounts) {
+            const grid = document.getElementById('accountsGrid');
+            const loading = document.getElementById('accountsLoading');
+            const empty = document.getElementById('accountsEmpty');
+            
+            loading.classList.add('hidden');
+            
+            if (accounts.length === 0) {
+                empty.classList.remove('hidden');
+                grid.classList.add('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+            grid.classList.remove('hidden');
+            grid.innerHTML = '';
+
+            for (const account of accounts) {
+                // Get balance
+                let balance;
+                try {
+                    const balanceResponse = await fetch(`${apiBase}/accounts/${account.accountId}/balances`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (!balanceResponse.ok) {
+                        console.error(`Ошибка получения баланса для счета ${account.accountId}:`, await balanceResponse.text());
+                        // Используем 0 если не удалось получить баланс
+                        balance = { amount: { amount: "0" }, currency: "RUB" };
+                    } else {
+                        const balanceData = await balanceResponse.json();
+                        balance = balanceData.data.balance[0];
+                    }
+                } catch (error) {
+                    console.error(`Ошибка при запросе баланса для счета ${account.accountId}:`, error);
+                    balance = { amount: { amount: "0" }, currency: "RUB" };
+                }
+
+                // Cache balance for summary
+                accountBalancesCache.set(account.accountId, parseFloat(balance.amount.amount));
+
+                // Get transactions
+                const transactions = await loadTransactions(account.accountId);
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">${account.accountSubType}</div>
+                            <div class="card-subtitle">${account.account[0].identification}</div>
+                    </div>
+                        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); closeAccount('${account.accountId}', '${account.account[0].identification}')">
+                            Закрыть
+                        </button>
+                    </div>
+                    <div class="card-balance">
+                        ${parseFloat(balance.amount.amount).toLocaleString('ru-RU')} ₽
+                    </div>
+                    ${transactions.length > 0 ? `
+                    <div class="transaction-list">
+                        <div style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: var(--spacing-sm);">Последние операции</div>
+                        ${transactions.slice(0, 3).map(tx => `
+                            <div class="transaction-item">
+                                <span class="transaction-desc">${tx.transactionInformation}</span>
+                                <span class="transaction-amount ${tx.creditDebitIndicator === 'Credit' ? 'credit' : 'debit'}">
+                                    ${tx.creditDebitIndicator === 'Credit' ? '+' : ''}${tx.amount.amount} ₽
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    ` : ''}
+                `;
+                grid.appendChild(card);
+            }
+        }
+
+        async function loadTransactions(accountId) {
+            try {
+                const response = await fetch(`${apiBase}/accounts/${accountId}/transactions`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) return [];
+                const data = await response.json();
+                return data.data.transaction || [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        // Product Agreements
+        let availableProducts = [];
+
+        async function loadProductAgreements() {
+            try {
+                const response = await fetch(`${apiBase}/product-agreements`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to load agreements');
+
+                const data = await response.json();
+                productsData = data.data;
+                displayProductAgreements(productsData);
+                updateSummary();
+            } catch (error) {
+                console.error('Error loading product agreements:', error);
+                document.getElementById('productsLoading').classList.add('hidden');
+                document.getElementById('productsEmpty').classList.remove('hidden');
+            }
+        }
+
+        function displayProductAgreements(agreements) {
+            const container = document.getElementById('productAgreements');
+            const loading = document.getElementById('productsLoading');
+            const empty = document.getElementById('productsEmpty');
+            
+            loading.classList.add('hidden');
+            
+            if (agreements.length === 0) {
+                empty.classList.remove('hidden');
+                container.classList.add('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+            container.classList.remove('hidden');
+
+            const typeEmojis = { 'deposit': '💰', 'loan': '💳', 'card': '💳' };
+            const typeLabels = { 'deposit': 'Депозит', 'loan': 'Кредит', 'card': 'Карта' };
+
+            container.innerHTML = agreements.map(agr => {
+                const daysTotal = agr.end_date ? Math.floor((new Date(agr.end_date) - new Date(agr.start_date)) / (1000 * 60 * 60 * 24)) : 365;
+                const daysPassed = Math.floor((new Date() - new Date(agr.start_date)) / (1000 * 60 * 60 * 24));
+                const progress = Math.min((daysPassed / daysTotal) * 100, 100);
+
+                return `
+                    <div class="product-card">
+                        <span class="product-badge ${agr.product_type}">${typeLabels[agr.product_type] || agr.product_type}</span>
+                        <div class="product-name">${typeEmojis[agr.product_type]} ${agr.product_name}</div>
+                        <div class="product-amount">${agr.amount.toLocaleString('ru-RU')} ₽</div>
+                        ${agr.account_number ? `<div style="font-size: 12px; color: var(--text-muted); font-family: monospace; margin-bottom: var(--spacing-sm);">Счет: ${agr.account_number}</div>` : ''}
+                        ${agr.end_date ? `
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progress}%"></div>
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: var(--spacing-md);">
+                                Осталось ${daysTotal - daysPassed} дней из ${daysTotal}
+                            </div>
+                        ` : ''}
+                        <div class="product-info">
+                            <div class="product-info-item">
+                                <span>📊</span>
+                                <span>До ${agr.end_date ? new Date(agr.end_date).toLocaleDateString('ru-RU') : '∞'}</span>
+                            </div>
+                            <div class="product-info-item">
+                                <span>✅</span>
+                                <span>${agr.status}</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: var(--spacing-sm); margin-top: var(--spacing-md);">
+                            <button class="btn btn-sm btn-secondary" onclick="viewAgreementDetails('${agr.agreement_id}')" style="flex: 1;">Детали</button>
+                            ${agr.status === 'active' ? `
+                                <button class="btn btn-sm btn-danger" onclick="closeAgreement('${agr.agreement_id}', '${agr.product_name}')">Закрыть</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        let accountBalancesCache = new Map();
+
+        function updateSummary() {
+            // Update accounts count
+            document.getElementById('accountsCount').textContent = accountsData.length;
+            
+            // Update products count
+            document.getElementById('productsCount').textContent = productsData.length;
+            
+            // Calculate total balance from cached balances
+            let totalBalance = 0;
+            for (const balance of accountBalancesCache.values()) {
+                totalBalance += balance;
+            }
+            
+            document.getElementById('totalBalance').textContent = `${totalBalance.toLocaleString('ru-RU')} ₽`;
+        }
+
+        // Account management
+        function openNewAccountModal() {
+            document.getElementById('newAccountModal').classList.add('active');
+        }
+
+        function closeNewAccountModal() {
+            document.getElementById('newAccountModal').classList.remove('active');
+            document.getElementById('newAccountType').value = 'checking';
+            // Не нужно сбрасывать newAccountBalance - он disabled
+        }
+
+        async function createNewAccount() {
+            const accountType = document.getElementById('newAccountType').value;
+            const initialBalance = 0; // Всегда 0, нельзя создавать деньги из ниоткуда
+
+            try {
+                const response = await fetch(`${apiBase}/accounts`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        account_type: accountType,
+                        initial_balance: initialBalance
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to create account');
+                }
+
+                showToast('Счет успешно открыт с балансом 0 ₽', 'success', '✅ Успех');
+                closeNewAccountModal();
+                await initDashboard(); // Перезагрузить все данные
+
+            } catch (error) {
+                console.error('Error creating account:', error);
+                showToast(error.message, 'error', '❌ Ошибка');
+            }
+        }
+
+        let closingAccountId = null;
+        let closingAccountNumber = null;
+        let closingAccountBalance = 0;
+
+        async function closeAccount(accountId, accountNumber) {
+            // Получить баланс счета
+            try {
+                const balanceResponse = await fetch(`${apiBase}/accounts/${accountId}/balances`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!balanceResponse.ok) throw new Error('Failed to get balance');
+                
+                const balanceData = await balanceResponse.json();
+                const balance = parseFloat(balanceData.data.balance[0].amount.amount);
+                
+                // Если баланс = 0, просто закрыть
+                if (balance === 0) {
+                    if (!confirm(`Закрыть счет ${accountNumber}?`)) return;
+                    
+                    await closeAccountDirect(accountId);
+                    return;
+                }
+                
+                // Если баланс > 0, показать модальное окно
+                closingAccountId = accountId;
+                closingAccountNumber = accountNumber;
+                closingAccountBalance = balance;
+                
+                document.getElementById('closeAccountBalance').textContent = `${balance.toLocaleString('ru-RU')} ₽`;
+                document.getElementById('closeAccountNumber').textContent = accountNumber;
+                
+                // Заполнить список других счетов
+                const destSelect = document.getElementById('destinationAccount');
+                destSelect.innerHTML = '<option value="">-- Выберите счет --</option>' +
+                    accountsData
+                        .filter(acc => acc.accountId !== accountId) // Исключить текущий счет
+                        .map(acc => 
+                            `<option value="${acc.accountId}">${acc.accountSubType} (...${acc.account[0].identification.slice(-4)})</option>`
+                        ).join('');
+                
+                document.getElementById('closeAccountModal').classList.add('active');
+                
+            } catch (error) {
+                console.error('Error checking balance:', error);
+                showToast('Ошибка проверки баланса', 'error', '❌ Ошибка');
+            }
+        }
+
+        function closeCloseAccountModal() {
+            document.getElementById('closeAccountModal').classList.remove('active');
+            closingAccountId = null;
+            closingAccountNumber = null;
+            closingAccountBalance = 0;
+        }
+
+        async function closeAccountWithTransfer() {
+            const destAccountId = document.getElementById('destinationAccount').value;
+            
+            if (!destAccountId) {
+                showToast('Выберите счет получателя', 'error', '⚠️ Внимание');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiBase}/accounts/${closingAccountId}/close`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'transfer',
+                        destination_account_id: destAccountId
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to close account');
+                }
+
+                showToast('Счет закрыт, средства переведены!', 'success', '✅ Успех');
+                closeCloseAccountModal();
+                await initDashboard();
+
+            } catch (error) {
+                console.error('Error closing account:', error);
+                showToast(error.message, 'error', '❌ Ошибка');
+            }
+        }
+
+        async function closeAccountWithDonation() {
+            if (!confirm(`Подарить ${closingAccountBalance.toLocaleString('ru-RU')} ₽ банку?\n\nСредства будут добавлены к капиталу банка.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiBase}/accounts/${closingAccountId}/close`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'donate'
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to close account');
+                }
+
+                showToast('Счет закрыт, средства переданы банку!', 'success', '✅ Успех');
+                closeCloseAccountModal();
+                await initDashboard();
+
+            } catch (error) {
+                console.error('Error closing account:', error);
+                showToast(error.message, 'error', '❌ Ошибка');
+            }
+        }
+
+        async function closeAccountDirect(accountId) {
+            try {
+                const response = await fetch(`${apiBase}/accounts/${accountId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: 'closed' })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to close account');
+                }
+
+                showToast('Счет успешно закрыт!', 'success', '✅ Успех');
+                await initDashboard();
+
+            } catch (error) {
+                console.error('Error closing account:', error);
+                showToast(error.message, 'error', '❌ Ошибка');
+            }
+        }
+
+        // Product management
+        async function openProductModal() {
+            document.getElementById('productModal').classList.add('active');
+            
+            try {
+                const response = await fetch(`${apiBase}/products`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to load products');
+
+                const data = await response.json();
+                availableProducts = data.data.product || [];
+                
+                const select = document.getElementById('selectedProduct');
+                select.innerHTML = '<option value="">-- Выберите --</option>' + 
+                    availableProducts.map(p => 
+                        `<option value="${p.productId}">${p.productName} (${p.interestRate}%)</option>`
+                    ).join('');
+                
+                document.getElementById('productsLoader').classList.add('hidden');
+                document.getElementById('productsList').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading products:', error);
+                document.getElementById('productsLoader').innerHTML = '<div style="color: var(--danger-color);">Ошибка загрузки продуктов</div>';
+            }
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModal').classList.remove('active');
+            document.getElementById('productDetails').classList.add('hidden');
+            document.getElementById('selectedProduct').value = '';
+            document.getElementById('productAmount').value = '';
+            document.getElementById('productsLoader').classList.remove('hidden');
+            document.getElementById('productsList').classList.add('hidden');
+        }
+
+        function updateProductDetails() {
+            const productId = document.getElementById('selectedProduct').value;
+            const product = availableProducts.find(p => p.productId === productId);
+            
+            if (product) {
+                document.getElementById('productRate').textContent = product.interestRate || 'N/A';
+                document.getElementById('productMinAmount').textContent = product.minAmount ? parseFloat(product.minAmount).toLocaleString('ru-RU') : '0';
+                document.getElementById('productDetails').classList.remove('hidden');
+
+                // Если deposit или card - показать выбор счета для пополнения
+                const needsSourceAccount = product.productType === 'deposit' || product.productType === 'card';
+                const sourceGroup = document.getElementById('sourceAccountGroup');
+                
+                if (needsSourceAccount) {
+                    // Заполнить список счетов
+                    const sourceSelect = document.getElementById('sourceAccount');
+                    sourceSelect.innerHTML = '<option value="">-- Выберите счет --</option>' +
+                        accountsData.map(acc => 
+                            `<option value="${acc.accountId}" data-balance="${acc.balance || 0}">${acc.accountSubType} (...${acc.account[0].identification.slice(-4)})</option>`
+                        ).join('');
+                    
+                    sourceGroup.classList.remove('hidden');
+                } else {
+                    sourceGroup.classList.add('hidden');
+                }
+            } else {
+                document.getElementById('productDetails').classList.add('hidden');
+                document.getElementById('sourceAccountGroup').classList.add('hidden');
+            }
+        }
+
+        async function checkAvailableFunds() {
+            const amount = parseFloat(document.getElementById('productAmount').value);
+            const sourceSelect = document.getElementById('sourceAccount');
+            const balanceInfo = document.getElementById('balanceInfo');
+            const insufficientDiv = document.getElementById('insufficientFunds');
+            const createBtn = document.getElementById('createAgreementBtn');
+
+            if (!sourceSelect.value || !amount) {
+                balanceInfo.textContent = '';
+                insufficientDiv.classList.add('hidden');
+                createBtn.disabled = false;
+                return;
+            }
+
+            // Get account balance
+            const accountId = sourceSelect.value;
+            
+            try {
+                const balanceResponse = await fetch(`${apiBase}/accounts/${accountId}/balances`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (balanceResponse.ok) {
+                    const balanceData = await balanceResponse.json();
+                    const balance = parseFloat(balanceData.data.balance[0].amount.amount);
+                    
+                    balanceInfo.textContent = `Доступно: ${balance.toLocaleString('ru-RU')} ₽`;
+                    
+                    if (amount > balance) {
+                        insufficientDiv.classList.remove('hidden');
+                        balanceInfo.style.color = 'var(--danger-color)';
+                        createBtn.disabled = true;
+                    } else {
+                        insufficientDiv.classList.add('hidden');
+                        balanceInfo.style.color = 'var(--success-color)';
+                        createBtn.disabled = false;
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking balance:', error);
+            }
+        }
+
+        async function createAgreement() {
+            const productId = document.getElementById('selectedProduct').value;
+            const amount = parseFloat(document.getElementById('productAmount').value);
+            const sourceAccountId = document.getElementById('sourceAccount').value;
+
+            if (!productId) {
+                showToast('Выберите продукт', 'error', '⚠️ Внимание');
+                return;
+            }
+
+            if (!amount || amount <= 0) {
+                showToast('Введите корректную сумму', 'error', '⚠️ Внимание');
+                return;
+            }
+
+            // Если нужен source account (deposit/card) - проверить что выбран
+            const product = availableProducts.find(p => p.productId === productId);
+            const needsSource = product && (product.productType === 'deposit' || product.productType === 'card');
+            
+            if (needsSource && !sourceAccountId) {
+                showToast('Выберите счет для пополнения', 'error', '⚠️ Внимание');
+                return;
+            }
+
+            try {
+                const requestBody = {
+                    product_id: productId,
+                    amount: amount
+                };
+
+                // Добавить source_account_id если указан
+                if (sourceAccountId) {
+                    requestBody.source_account_id = sourceAccountId;
+                }
+
+                const response = await fetch(`${apiBase}/product-agreements`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to create agreement');
+                }
+
+                showToast('Продукт успешно открыт!', 'success', '✅ Успех');
+                closeProductModal();
+                loadProductAgreements();
+                loadAccounts();
+                loadAllTransactions();
+
+            } catch (error) {
+                console.error('Error creating agreement:', error);
+                showToast(error.message, 'error', '❌ Ошибка');
+            }
+        }
+
+        async function viewAgreementDetails(agreementId) {
+            try {
+                const response = await fetch(`${apiBase}/product-agreements/${agreementId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to load agreement details');
+
+                const data = await response.json();
+                const agr = data.data;
+
+                const typeLabels = { 'deposit': 'Депозит', 'loan': 'Кредит', 'card': 'Карта' };
+
+                const details = `
+📋 ${agr.product_name}
+Тип: ${typeLabels[agr.product_type] || agr.product_type}
+
+💰 Сумма: ${agr.amount.toLocaleString('ru-RU')} ₽
+📊 Процентная ставка: ${agr.interest_rate || 'N/A'}%
+${agr.account_number ? `💳 Счет: ${agr.account_number}` : ''}
+${agr.account_balance !== null ? `💵 Баланс счета: ${agr.account_balance.toLocaleString('ru-RU')} ₽` : ''}
+
+📅 Дата открытия: ${new Date(agr.start_date).toLocaleDateString('ru-RU')}
+${agr.end_date ? `📅 Дата закрытия: ${new Date(agr.end_date).toLocaleDateString('ru-RU')}` : ''}
+
+✅ Статус: ${agr.status}
+                `.trim();
+
+                alert(details);
+
+            } catch (error) {
+                console.error('Error loading agreement details:', error);
+                showToast('Ошибка загрузки деталей договора', 'error', '❌ Ошибка');
+            }
+        }
+
+        let closingAgreementId = null;
+        let closingAgreementName = null;
+        let closingAgreementDebt = 0;
+
+        async function closeAgreement(agreementId, productName) {
+            // Получить детали договора
+            try {
+                const response = await fetch(`${apiBase}/product-agreements/${agreementId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to load agreement');
+
+                const data = await response.json();
+                const agreement = data.data;
+
+                // Если это кредит (loan), проверить задолженность
+                if (agreement.product_type === 'loan' && agreement.account_balance && agreement.account_balance > 0) {
+                    // Показать модальное окно погашения
+                    closingAgreementId = agreementId;
+                    closingAgreementName = productName;
+                    closingAgreementDebt = agreement.account_balance;
+                    
+                    document.getElementById('loanDebt').textContent = `${agreement.account_balance.toLocaleString('ru-RU')} ₽`;
+                    document.getElementById('loanProductName').textContent = productName;
+                    
+                    // Заполнить список счетов для погашения
+                    const repaySelect = document.getElementById('repaymentAccount');
+                    repaySelect.innerHTML = '<option value="">-- Выберите счет --</option>' +
+                        accountsData
+                            .filter(acc => acc.accountId !== `acc-${agreement.account_id}`) // Исключить кредитный счет
+                            .map(acc => 
+                                `<option value="${acc.accountId}">${acc.accountSubType} (...${acc.account[0].identification.slice(-4)})</option>`
+                            ).join('');
+                    
+                    document.getElementById('closeLoanModal').classList.add('active');
+                    return;
+                }
+                
+                // Для других продуктов или если balance = 0, просто закрыть
+                if (!confirm(`Закрыть договор "${productName}"?`)) return;
+                
+                await closeAgreementDirect(agreementId);
+
+            } catch (error) {
+                console.error('Error loading agreement details:', error);
+                showToast('Ошибка загрузки деталей договора', 'error', '❌ Ошибка');
+            }
+        }
+
+        function closeCloseLoanModal() {
+            document.getElementById('closeLoanModal').classList.remove('active');
+            closingAgreementId = null;
+            closingAgreementName = null;
+            closingAgreementDebt = 0;
+        }
+
+        async function checkRepaymentFunds() {
+            const accountId = document.getElementById('repaymentAccount').value;
+            const balanceInfo = document.getElementById('repaymentBalanceInfo');
+            const insufficientDiv = document.getElementById('insufficientRepayment');
+            const repayBtn = document.getElementById('repayLoanBtn');
+
+            if (!accountId) {
+                balanceInfo.textContent = '';
+                insufficientDiv.classList.add('hidden');
+                repayBtn.disabled = false;
+                return;
+            }
+
+            try {
+                const balanceResponse = await fetch(`${apiBase}/accounts/${accountId}/balances`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (balanceResponse.ok) {
+                    const balanceData = await balanceResponse.json();
+                    const balance = parseFloat(balanceData.data.balance[0].amount.amount);
+                    
+                    balanceInfo.textContent = `Доступно: ${balance.toLocaleString('ru-RU')} ₽`;
+                    
+                    if (balance < closingAgreementDebt) {
+                        insufficientDiv.classList.remove('hidden');
+                        balanceInfo.style.color = 'var(--danger-color)';
+                        repayBtn.disabled = true;
+                    } else {
+                        insufficientDiv.classList.add('hidden');
+                        balanceInfo.style.color = 'var(--success-color)';
+                        repayBtn.disabled = false;
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking repayment balance:', error);
+            }
+        }
+
+        async function repayAndCloseLoan() {
+            const repaymentAccountId = document.getElementById('repaymentAccount').value;
+            
+            if (!repaymentAccountId) {
+                showToast('Выберите счет для погашения', 'error', '⚠️ Внимание');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiBase}/product-agreements/${closingAgreementId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        repayment_account_id: repaymentAccountId,
+                        repayment_amount: closingAgreementDebt
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to close loan');
+                }
+
+                showToast('Кредит погашен и закрыт!', 'success', '✅ Успех');
+                closeCloseLoanModal();
+                await initDashboard();
+
+            } catch (error) {
+                console.error('Error repaying loan:', error);
+                showToast(error.message, 'error', '❌ Ошибка');
+            }
+        }
+
+        async function closeAgreementDirect(agreementId) {
+            try {
+                const response = await fetch(`${apiBase}/product-agreements/${agreementId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to close agreement');
+                }
+
+                showToast('Договор успешно закрыт!', 'success', '✅ Успех');
+                await initDashboard();
+
+            } catch (error) {
+                console.error('Error closing agreement:', error);
+                showToast(error.message, 'error', '❌ Ошибка');
+            }
+        }
+
+        // Payments
+        async function makePayment() {
+            const fromAccount = document.getElementById('fromAccount').value;
+            const toAccount = document.getElementById('toAccount').value;
+            const amount = document.getElementById('amount').value;
+            const resultDiv = document.getElementById('paymentResult');
+
+            if (!fromAccount || !toAccount || !amount) {
+                showToast('Заполните все поля!', 'error', '⚠️ Внимание');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiBase}/payments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        data: {
+                            initiation: {
+                                instructedAmount: { amount: amount, currency: 'RUB' },
+                                debtorAccount: { identification: fromAccount },
+                                creditorAccount: { identification: toAccount },
+                                remittanceInformation: { unstructured: 'Перевод через UI' }
+                            }
+                        }
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast(`Платеж выполнен! ID: ${data.data.paymentId}`, 'success', '✅ Успех');
+                    document.getElementById('fromAccount').value = '';
+                    document.getElementById('toAccount').value = '';
+                    document.getElementById('amount').value = '';
+                    setTimeout(() => loadAccounts(), 1000);
+                } else {
+                    throw new Error(data.detail || 'Ошибка создания платежа');
+                }
+
+            } catch (error) {
+                showToast(error.message, 'error', '❌ Ошибка');
+            }
+        }
+
+        // Multibank
+        async function loadBankAccounts(bankCode, url, bankName) {
+            const container = document.getElementById('multibankAccounts');
+            
+            if (!container.innerHTML || container.innerHTML.includes('Загрузка')) {
+                container.innerHTML = `<div style="text-align: center; padding: var(--spacing-lg); color: var(--text-muted);">Загрузка ${bankName}...</div>`;
+            }
+            
+            // Получаем реальный client_id текущего пользователя
+            const currentClientId = clientId || localStorage.getItem('client_id');
+            
+            try {
+                console.log(`🔄 ${bankName}: начинаем OpenBanking flow для ${currentClientId}...`);
+                
+                // ШАГ 1: Получить банковский токен
+                const bankTokenResponse = await fetch(`${apiBase}/multibank/bank-token`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bank_url: url })
+                });
+                
+                if (!bankTokenResponse.ok) {
+                    throw new Error('Не удалось получить банковский токен');
+                }
+                
+                const bankTokenData = await bankTokenResponse.json();
+                const bankToken = bankTokenData.access_token;
+                console.log(`✅ ${bankName}: получен банковский токен`);
+                
+                // ШАГ 2: Попробовать получить consent (сначала для реального пользователя, потом тестовые)
+                // Формируем список возможных client_id для попытки
+                // Для команды team251 используем ТОЛЬКО team251-X клиентов (team251-1 до team251-10)
+                let clientIdsToTry = [];
+                
+                if (currentClientId && currentClientId.startsWith('team251-')) {
+                    // Если пользователь из team251, пробуем ТОЛЬКО team251 клиентов (1-10)
+                    const team251Number = parseInt(currentClientId.split('-')[1]) || 1;
+                    
+                    // Сначала пробуем текущего пользователя, потом других team251 клиентов
+                    clientIdsToTry = [currentClientId];  // team251-X (текущий пользователь)
+                    
+                    // Добавляем других team251 клиентов (1-10), начиная с текущего номера
+                    for (let i = 1; i <= 10; i++) {
+                        const clientId = `team251-${i}`;
+                        if (clientId !== currentClientId) {
+                            clientIdsToTry.push(clientId);
+                        }
+                    }
+                    
+                    console.log(`✅ Используем только team251 клиентов (1-10) для команды 251`);
+                } else if (currentClientId && currentClientId.startsWith('team')) {
+                    // Если пользователь из другой команды, используем его команду
+                    const teamPrefix = currentClientId.split('-')[0]; // например, "team200"
+                    const teamNumber = parseInt(currentClientId.split('-')[1]) || 1;
+                    
+                    clientIdsToTry = [currentClientId];
+                    
+                    // Добавляем других клиентов из той же команды (1-10)
+                    for (let i = 1; i <= 10; i++) {
+                        const clientId = `${teamPrefix}-${i}`;
+                        if (clientId !== currentClientId) {
+                            clientIdsToTry.push(clientId);
+                        }
+                    }
+                    
+                    console.log(`✅ Используем клиентов команды ${teamPrefix}`);
+                } else {
+                    // Для других клиентов (не team*) используем текущий client_id
+                    clientIdsToTry = [currentClientId].filter(id => id);
+                    console.log(`⚠️ Используем только текущего клиента: ${currentClientId}`);
+                }
+                
+                let consentId = null;
+                let workingClientId = null;
+                
+                console.log(`🔍 ${bankName}: пробуем получить consent для client_id: ${clientIdsToTry.slice(0, 5).join(', ')}${clientIdsToTry.length > 5 ? ` ... (всего ${clientIdsToTry.length})` : ''}`);
+                console.log(`   Текущий пользователь: ${currentClientId}`);
+                
+                for (const clientIdToTry of clientIdsToTry) {
+                    try {
+                        console.log(`  → Пробуем client_id: ${clientIdToTry}`);
+                        const consentResponse = await fetch(`${apiBase}/multibank/request-consent`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                bank_url: url,
+                                bank_token: bankToken,
+                                client_id: clientIdToTry
+                            })
+                        });
+                        
+                        if (consentResponse.ok) {
+                            const consentData = await consentResponse.json();
+                            consentId = consentData.Data?.ConsentId || 
+                                       consentData.consent_id || 
+                                       consentData.ConsentId ||
+                                       consentData.id;
+                            workingClientId = clientIdToTry;
+                            console.log(`✅ ${bankName}: получен consent для ${clientIdToTry} (используется этот client_id)`, consentData);
+                            break;
+                        } else {
+                            const errorText = await consentResponse.text();
+                            console.warn(`  ❌ ${bankName}: не удалось получить consent для ${clientIdToTry}: ${errorText}`);
+                        }
+                    } catch (e) {
+                        console.warn(`  ⚠️ ${bankName}: ошибка при запросе consent для ${clientIdToTry}:`, e);
+                        continue;
+                    }
+                }
+                
+                if (!consentId || !workingClientId) {
+                    throw new Error(`Не удалось получить согласие ни для одного клиента. Пробовали: ${clientIdsToTry.join(', ')}`);
+                }
+                
+                console.log(`📋 ${bankName}: запрашиваем счета для client_id=${workingClientId} из банка ${url}`);
+                
+                // ШАГ 3: Получить счета
+                const accountsResponse = await fetch(`${apiBase}/multibank/accounts-with-consent`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        bank_url: url,
+                        bank_token: bankToken,
+                        consent_id: consentId,
+                        client_id: workingClientId
+                    })
+                });
+                
+                if (!accountsResponse.ok) {
+                    const errorData = await accountsResponse.json();
+                    
+                    // Если ошибка CONSENT_REQUIRED - показываем специальное сообщение
+                    if (errorData.detail?.error === 'CONSENT_REQUIRED' || errorData.detail?.includes?.('CONSENT_REQUIRED')) {
+                        const consentMessage = `
+                            <div style="background: var(--bg-hover); padding: var(--spacing-lg); border-radius: var(--border-radius-sm); margin-bottom: var(--spacing-md); border-left: 4px solid var(--warning-color);">
+                                <h3 style="color: var(--text-primary); margin-bottom: var(--spacing-md);">⚠️ ${bankName}</h3>
+                                <p style="color: var(--text-secondary); margin-bottom: var(--spacing-md);">
+                                    Требуется авторизация согласия на доступ к счетам.
+                                </p>
+                                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: var(--spacing-md);">
+                                    Для доступа к счетам этого банка необходимо перейти на сайт банка и авторизовать согласие.
+                                </p>
+                                <a href="${url}/docs" target="_blank" style="display: inline-block; padding: var(--spacing-sm) var(--spacing-md); background: var(--primary-color); color: white; text-decoration: none; border-radius: var(--border-radius-sm); font-size: 14px;">
+                                    🔗 Перейти в ${bankName}
+                                </a>
+                            </div>
+                        `;
+                        container.innerHTML = consentMessage;
+                        return;
+                    }
+                    
+                    throw new Error(errorData.detail || 'Ошибка получения счетов');
+                }
+                
+                const accountsData = await accountsResponse.json();
+                console.log(`✅ ${bankName}: получено ${accountsData.data.account.length} счетов для client_id=${workingClientId}`);
+                console.log(`   Данные приходят из банка: ${url}`);
+                console.log(`   Счета:`, accountsData.data.account.map(acc => ({
+                    accountId: acc.accountId,
+                    number: acc.account[0].identification,
+                    type: acc.accountSubType
+                })));
+                
+                // Формируем HTML с счетами
+                let bankHtml = `<div style="background: var(--bg-hover); padding: var(--spacing-md); border-radius: var(--border-radius-sm); margin-bottom: var(--spacing-md);">
+                    <h3 style="color: var(--text-primary); margin-bottom: var(--spacing-md);">🏦 ${bankName}</h3>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: var(--spacing-sm); padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px;">
+                        🔐 Доступ через credentials команды <strong>team251</strong>
+                        <br>👤 Запрашиваем счета для client_id: <strong>${workingClientId}</strong>
+                    </div>`;
+                
+                for (const account of accountsData.data.account) {
+                    // Получаем баланс
+                    const balanceResponse = await fetch(
+                        `${apiBase}/multibank/balances-with-consent?account_id=${encodeURIComponent(account.accountId)}&bank_url=${encodeURIComponent(url)}&bank_token=${encodeURIComponent(bankToken)}&consent_id=${encodeURIComponent(consentId)}`,
+                        { method: 'POST' }
+                    );
+                    
+                    if (balanceResponse.ok) {
+                        const balanceData = await balanceResponse.json();
+                        const balance = parseFloat(balanceData.data.balance[0].amount.amount);
+                        
+                        console.log(`   💰 Счет ${account.account[0].identification}: ${balance.toLocaleString('ru-RU')} ₽`);
+                        
+                        bankHtml += `
+                            <div style="padding: var(--spacing-md); background: var(--bg-card); border-radius: var(--border-radius-sm); margin-bottom: var(--spacing-sm); display: flex; justify-content: space-between;">
+                                <div>
+                                    <div style="font-size: 12px; color: var(--text-muted); font-family: monospace;">${account.account[0].identification}</div>
+                                    <div style="font-size: 11px; color: var(--text-secondary);">${account.accountSubType}</div>
+                                </div>
+                                <div style="font-size: 18px; font-weight: 600; color: var(--success-color);">
+                                    ${balance.toLocaleString('ru-RU')} ₽
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        console.warn(`   ⚠️ Не удалось получить баланс для счета ${account.account[0].identification}`);
+                    }
+                }
+                
+                bankHtml += '</div>';
+                container.innerHTML = bankHtml;
+                
+            } catch (error) {
+                console.error(`❌ ${bankName}: ошибка:`, error);
+                const errorHtml = `
+                    <div style="background: var(--bg-hover); padding: var(--spacing-lg); border-radius: var(--border-radius-sm); margin-bottom: var(--spacing-md); border-left: 4px solid var(--danger-color);">
+                        <h3 style="color: var(--text-primary); margin-bottom: var(--spacing-md);">❌ ${bankName}</h3>
+                        <p style="color: var(--text-secondary);">
+                            ${error.message}
+                        </p>
+                    </div>
+                `;
+                container.innerHTML = errorHtml;
+            }
+        }
+
+        async function loadAllBanks() {
+            const container = document.getElementById('multibankAccounts');
+            container.innerHTML = '<div style="text-align: center; padding: var(--spacing-lg); color: var(--text-muted);">Загрузка из всех банков...</div>';
+
+            // Получаем реальный client_id текущего пользователя
+            const currentClientId = clientId || localStorage.getItem('client_id');
+            
+            // Конфигурация банков
+            const banks = [
+                { 
+                    code: 'vbank', 
+                    name: 'Virtual Bank', 
+                    url: 'https://vbank.open.bankingapi.ru'
+                },
+                { 
+                    code: 'abank', 
+                    name: 'Awesome Bank', 
+                    url: 'https://abank.open.bankingapi.ru'
+                },
+                { 
+                    code: 'sbank', 
+                    name: 'Smart Bank', 
+                    url: 'https://sbank.open.bankingapi.ru'
+                }
+            ];
+
+            let allAccounts = [];
+            let totalBalance = 0;
+
+            for (const bank of banks) {
+                try {
+                    console.log(`🔄 ${bank.name}: начинаем OpenBanking flow для ${currentClientId}...`);
+                    
+                    // ШАГ 1: Получить банковский токен
+                    const bankTokenResponse = await fetch(`${apiBase}/multibank/bank-token`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            bank_url: bank.url
+                        })
+                    });
+                    
+                    if (!bankTokenResponse.ok) {
+                        console.error(`❌ ${bank.name}: не удалось получить банковский токен`);
+                        continue;
+                    }
+                    
+                    const bankTokenData = await bankTokenResponse.json();
+                    const bankToken = bankTokenData.access_token;
+                    console.log(`✅ ${bank.name}: получен банковский токен`);
+                    
+                    // ШАГ 2: Запросить согласие (consent) для текущего пользователя
+                    let consentId = null;
+                    let workingClientId = currentClientId;
+                    
+                    // Формируем список возможных client_id для попытки
+                    // Для команды team251 используем ТОЛЬКО team251-X клиентов (team251-1 до team251-10)
+                    let clientIdsToTry = [];
+                    
+                    if (currentClientId && currentClientId.startsWith('team251-')) {
+                        // Если пользователь из team251, пробуем ТОЛЬКО team251 клиентов (1-10)
+                        const team251Number = parseInt(currentClientId.split('-')[1]) || 1;
+                        
+                        // Сначала пробуем текущего пользователя, потом других team251 клиентов
+                        clientIdsToTry = [currentClientId];  // team251-X (текущий пользователь)
+                        
+                        // Добавляем других team251 клиентов (1-10), начиная с текущего номера
+                        for (let i = 1; i <= 10; i++) {
+                            const clientId = `team251-${i}`;
+                            if (clientId !== currentClientId) {
+                                clientIdsToTry.push(clientId);
+                            }
+                        }
+                        
+                        console.log(`✅ Используем только team251 клиентов (1-10) для команды 251`);
+                    } else if (currentClientId && currentClientId.startsWith('team')) {
+                        // Если пользователь из другой команды, используем его команду
+                        const teamPrefix = currentClientId.split('-')[0]; // например, "team200"
+                        const teamNumber = parseInt(currentClientId.split('-')[1]) || 1;
+                        
+                        clientIdsToTry = [currentClientId];
+                        
+                        // Добавляем других клиентов из той же команды (1-10)
+                        for (let i = 1; i <= 10; i++) {
+                            const clientId = `${teamPrefix}-${i}`;
+                            if (clientId !== currentClientId) {
+                                clientIdsToTry.push(clientId);
+                            }
+                        }
+                        
+                        console.log(`✅ Используем клиентов команды ${teamPrefix}`);
+                    } else {
+                        // Для других клиентов (не team*) используем текущий client_id
+                        clientIdsToTry = [currentClientId].filter(id => id);
+                        console.log(`⚠️ Используем только текущего клиента: ${currentClientId}`);
+                    }
+                    
+                    console.log(`🔍 ${bank.name}: пробуем получить consent для client_id: ${clientIdsToTry.slice(0, 5).join(', ')}${clientIdsToTry.length > 5 ? ` ... (всего ${clientIdsToTry.length})` : ''}`);
+                    console.log(`   Текущий пользователь: ${currentClientId}`);
+                    
+                    for (const clientIdToTry of clientIdsToTry) {
+                        try {
+                            console.log(`  → Пробуем client_id: ${clientIdToTry}`);
+                            const consentResponse = await fetch(`${apiBase}/multibank/request-consent`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    bank_url: bank.url,
+                                    bank_token: bankToken,
+                                    client_id: clientIdToTry
+                                })
+                            });
+                            
+                            if (consentResponse.ok) {
+                                const consentData = await consentResponse.json();
+                                // Поддерживаем разные форматы ответа
+                                consentId = consentData.Data?.ConsentId || 
+                                           consentData.consent_id || 
+                                           consentData.ConsentId ||
+                                           consentData.id;
+                                workingClientId = clientIdToTry;
+                                console.log(`✅ ${bank.name}: получен consent для ${clientIdToTry} (используется этот client_id для запроса счетов)`, consentData);
+                                break;
+                            } else {
+                                const errorText = await consentResponse.text();
+                                console.warn(`  ❌ ${bank.name}: не удалось получить consent для ${clientIdToTry}: ${errorText}`);
+                            }
+                        } catch (e) {
+                            console.warn(`  ⚠️ ${bank.name}: ошибка при запросе consent для ${clientIdToTry}:`, e);
+                            continue;
+                        }
+                    }
+                    
+                    if (!consentId || !workingClientId) {
+                        console.warn(`⚠️ ${bank.name}: не удалось получить согласие ни для одного client_id`);
+                        continue;
+                    }
+                    
+                    console.log(`📋 ${bank.name}: запрашиваем счета для client_id=${workingClientId} из банка ${bank.url}`);
+                    
+                    // ШАГ 3: Получить счета с использованием consent
+                    const accountsResponse = await fetch(`${apiBase}/multibank/accounts-with-consent`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            bank_url: bank.url,
+                            bank_token: bankToken,
+                            consent_id: consentId,
+                            client_id: workingClientId
+                        })
+                    });
+
+                    if (!accountsResponse.ok) {
+                        const errorData = await accountsResponse.json();
+                        
+                        // Если ошибка CONSENT_REQUIRED - добавляем предупреждение
+                        if (errorData.detail?.error === 'CONSENT_REQUIRED' || errorData.detail?.includes?.('CONSENT_REQUIRED')) {
+                            console.warn(`⚠️ ${bank.name}: требуется авторизация согласия`);
+                            allAccounts.push({
+                                bank: bank.name,
+                                account: '⚠️ Требуется авторизация',
+                                balance: 0,
+                                type: 'Consent Required',
+                                needsConsent: true,
+                                bankUrl: bank.url
+                            });
+                        } else {
+                            console.error(`❌ ${bank.name}: не удалось получить счета`);
+                        }
+                        continue;
+                    }
+
+                    const accountsData = await accountsResponse.json();
+                    console.log(`✅ ${bank.name}: получено ${accountsData.data.account.length} счетов для client_id=${workingClientId}`);
+                    console.log(`   Данные приходят из банка: ${bank.url}`);
+                    console.log(`   Счета:`, accountsData.data.account.map(acc => ({
+                        accountId: acc.accountId,
+                        number: acc.account[0].identification,
+                        type: acc.accountSubType
+                    })));
+
+                    for (const account of accountsData.data.account) {
+                        // Получаем баланс с использованием consent
+                        const balanceResponse = await fetch(`${apiBase}/multibank/balances-with-consent?account_id=${encodeURIComponent(account.accountId)}&bank_url=${encodeURIComponent(bank.url)}&bank_token=${encodeURIComponent(bankToken)}&consent_id=${encodeURIComponent(consentId)}`, {
+                            method: 'POST'
+                        });
+
+                        if (balanceResponse.ok) {
+                            const balanceData = await balanceResponse.json();
+                            const balance = parseFloat(balanceData.data.balance[0].amount.amount);
+                            totalBalance += balance;
+
+                            console.log(`   💰 Счет ${account.account[0].identification}: ${balance.toLocaleString('ru-RU')} ₽`);
+
+                            allAccounts.push({
+                                bank: bank.name,
+                                account: account.account[0].identification,
+                                balance: balance,
+                                type: account.accountSubType,
+                                clientId: workingClientId, // Добавляем информацию о том, какой client_id используется
+                                accountId: account.accountId
+                            });
+                        } else {
+                            console.warn(`   ⚠️ Не удалось получить баланс для счета ${account.account[0].identification}`);
+                        }
+                    }
+
+                } catch (error) {
+                    console.error(`Ошибка загрузки из ${bank.name}:`, error);
+                }
+            }
+
+            if (allAccounts.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">🏦</div><div>Не удалось загрузить счета</div></div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <div style="background: linear-gradient(135deg, var(--info-color), var(--primary-color)); padding: var(--spacing-lg); border-radius: var(--border-radius-md); margin-bottom: var(--spacing-md); color: white;">
+                    <div style="font-size: 14px; margin-bottom: 8px; opacity: 0.9;">Всего во всех банках</div>
+                    <div style="font-size: 36px; font-weight: 700;">
+                        ${totalBalance.toLocaleString('ru-RU')} ₽
+                    </div>
+                    <div style="font-size: 13px; margin-top: 8px; opacity: 0.9;">
+                        Счетов: ${allAccounts.length} • Банков: ${new Set(allAccounts.map(a => a.bank)).size}
+                    </div>
+                    <div style="font-size: 11px; margin-top: 8px; opacity: 0.8; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 4px;">
+                        ℹ️ Данные загружаются из песочниц банков (VBank, ABank, SBank) через OpenBanking API
+                        <br>📋 Используются credentials команды <strong>team251</strong> для доступа к песочницам
+                        <br>👤 Запрашиваются счета клиентов: ${new Set(allAccounts.map(a => a.clientId)).size > 0 ? Array.from(new Set(allAccounts.map(a => a.clientId))).slice(0, 3).join(', ') + (allAccounts.length > 3 ? '...' : '') : 'неизвестно'}
+                    </div>
+                </div>
+                ${allAccounts.map(acc => {
+                    if (acc.needsConsent) {
+                        return `
+                            <div style="padding: var(--spacing-md); border: 2px solid var(--warning-color); border-radius: var(--border-radius-sm); margin-bottom: var(--spacing-sm); background: var(--bg-hover);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-sm);">
+                                    <div>
+                                        <div style="font-weight: 600; color: var(--text-primary);">⚠️ ${acc.bank}</div>
+                                        <div style="font-size: 12px; color: var(--text-muted);">${acc.account}</div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: var(--spacing-sm);">
+                                    Для доступа к счетам перейдите в банк и авторизуйте согласие
+                                </div>
+                                <a href="${acc.bankUrl}/docs" target="_blank" style="display: inline-block; padding: 6px 12px; background: var(--primary-color); color: white; text-decoration: none; border-radius: var(--border-radius-sm); font-size: 13px;">
+                                    🔗 Перейти в ${acc.bank}
+                                </a>
+                            </div>
+                        `;
+                    }
+                    return `
+                        <div style="padding: var(--spacing-md); border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); margin-bottom: var(--spacing-sm); display: flex; justify-content: space-between; align-items: center; background: var(--bg-card);">
+                            <div>
+                                <div style="font-weight: 600; color: var(--text-primary);">${acc.bank}</div>
+                                <div style="font-size: 12px; color: var(--text-muted); font-family: monospace;">${acc.account}</div>
+                                <div style="font-size: 11px; color: var(--text-secondary);">${acc.type}</div>
+                                ${acc.clientId ? `<div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">client_id: ${acc.clientId}</div>` : ''}
+                            </div>
+                            <div style="font-size: 20px; font-weight: 700; color: var(--success-color);">
+                                ${acc.balance.toLocaleString('ru-RU')} ₽
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            `;
+            
+            // Update total balance in summary
+            document.getElementById('totalBalance').textContent = `${totalBalance.toLocaleString('ru-RU')} ₽`;
+        }
+
+        // === Transactions History ===
+        let allTransactions = [];
+        let filteredTransactions = [];
+
+        async function loadAllTransactions() {
+            allTransactions = [];
+            const filterSelect = document.getElementById('filterAccount');
+            filterSelect.innerHTML = '<option value="">Все счета</option>';
+
+            for (const account of accountsData) {
+                const transactions = await loadTransactions(account.accountId);
+                
+                transactions.forEach(tx => {
+                    allTransactions.push({
+                        ...tx,
+                        accountId: account.accountId,
+                        accountNumber: account.account[0].identification,
+                        accountType: account.accountSubType
+                    });
+                });
+
+                // Add to filter
+                filterSelect.innerHTML += `<option value="${account.accountId}">${account.accountSubType} (${account.account[0].identification.substring(0, 10)}...)</option>`;
+            }
+
+            filteredTransactions = [...allTransactions];
+            displayTransactionsTable();
+        }
+
+        function filterTransactions() {
+            const accountFilter = document.getElementById('filterAccount').value;
+            const typeFilter = document.getElementById('filterType').value;
+            const periodFilter = document.getElementById('filterPeriod').value;
+
+            filteredTransactions = allTransactions.filter(tx => {
+                // Account filter
+                if (accountFilter && tx.accountId !== accountFilter) return false;
+
+                // Type filter
+                if (typeFilter && tx.creditDebitIndicator.toLowerCase() !== typeFilter) return false;
+
+                // Period filter
+                if (periodFilter !== 'all') {
+                    const txDate = new Date(tx.bookingDateTime);
+                    const now = new Date();
+                    
+                    if (periodFilter === 'today') {
+                        if (txDate.toDateString() !== now.toDateString()) return false;
+                    } else if (periodFilter === 'week') {
+                        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        if (txDate < weekAgo) return false;
+                    } else if (periodFilter === 'month') {
+                        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                        if (txDate < monthAgo) return false;
+                    }
+                }
+
+                return true;
+            });
+
+            displayTransactionsTable();
+        }
+
+        function displayTransactionsTable() {
+            const container = document.getElementById('transactionsTableContainer');
+
+            if (filteredTransactions.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><div>Нет операций по заданным фильтрам</div></div>';
+                return;
+            }
+
+            // Sort by date (newest first)
+            const sorted = [...filteredTransactions].sort((a, b) => new Date(b.bookingDateTime) - new Date(a.bookingDateTime));
+
+            const tableHTML = `
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-color);">
+                            <th style="padding: var(--spacing-md); text-align: left; font-weight: 600; color: var(--text-primary);">Дата</th>
+                            <th style="padding: var(--spacing-md); text-align: left; font-weight: 600; color: var(--text-primary);">Описание</th>
+                            <th style="padding: var(--spacing-md); text-align: left; font-weight: 600; color: var(--text-primary);">Счет</th>
+                            <th style="padding: var(--spacing-md); text-align: right; font-weight: 600; color: var(--text-primary);">Сумма</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sorted.slice(0, 20).map(tx => `
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: var(--spacing-md); color: var(--text-secondary); font-size: 13px;">
+                                    ${new Date(tx.bookingDateTime).toLocaleDateString('ru-RU')}<br>
+                                    <span style="font-size: 11px; color: var(--text-muted);">${new Date(tx.bookingDateTime).toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'})}</span>
+                                </td>
+                                <td style="padding: var(--spacing-md); color: var(--text-primary); font-size: 14px;">
+                                    ${tx.transactionInformation}
+                                </td>
+                                <td style="padding: var(--spacing-md); color: var(--text-secondary); font-family: monospace; font-size: 12px;">
+                                    ${tx.accountType}<br>
+                                    <span style="font-size: 11px; color: var(--text-muted);">${tx.accountNumber.substring(0, 12)}...</span>
+                                </td>
+                                <td style="padding: var(--spacing-md); text-align: right; font-weight: 600; font-size: 15px; color: ${tx.creditDebitIndicator === 'Credit' ? 'var(--success-color)' : 'var(--danger-color)'};">
+                                    ${tx.creditDebitIndicator === 'Credit' ? '+' : '-'}${parseFloat(tx.amount.amount).toLocaleString('ru-RU')} ₽
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                ${sorted.length > 20 ? `
+                    <div style="text-align: center; margin-top: var(--spacing-md); color: var(--text-muted); font-size: 13px;">
+                        Показано 20 из ${sorted.length} операций
+        </div>
+                ` : ''}
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        // Initial load
+        async function initDashboard() {
+            await loadAccounts();
+            await loadProductAgreements();
+            await loadAllTransactions();
+        }
+        
+        initDashboard();
+
+        // Click outside sidebar to close (mobile)
+        document.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.querySelector('.menu-toggle');
+            
+            if (window.innerWidth < 1024 && 
+                sidebar.classList.contains('active') && 
+                !sidebar.contains(e.target) && 
+                !menuToggle.contains(e.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
+

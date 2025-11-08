@@ -1,0 +1,65 @@
+@startuml bank-structure
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Структура банка участника
+
+Person(client, "Клиент банка", "Пользователь")
+Person(banker, "Банкир", "Сотрудник команды")
+Person(developer, "Разработчик", "Участник хакатона")
+
+System_Ext(directory, "е-Каталог", "Федеративная инфраструктура\nМониторинг банков")
+System_Ext(other_banks, "Другие банки участников", "Федеративная сеть")
+
+System_Boundary(bank, "Банк команды (репозиторий участника)") {
+    Container(client_ui, "UI Клиента", "HTML/JS", "Авторизация, баланс счетов, мультибанк")
+    Container(banker_ui, "Кабинет банкира", "HTML/JS", "Управление: клиенты, продукты, команды")
+    Container(developer_ui, "Developer Portal", "HTML", "Публичная регистрация команд")
+    
+    Container(backend, "Backend API", "FastAPI", "REST API: accounts, products, consents, payments")
+    Container(multibank_proxy, "Multibank Proxy", "FastAPI", "Проксирование запросов к внешним банкам")
+    Container(admin_api, "Admin API", "FastAPI", "Endpoints для е-Каталога")
+    Container(jwks, "JWKS Endpoint", "FastAPI", "/.well-known/jwks.json")
+    
+    Container(auth_service, "Auth Service", "OAuth2/JWT", "HS256 (клиенты)\nRS256 (банки)")
+    Container(consent_service, "Consent Service", "Service", "Управление согласиями OpenBanking")
+    
+    ContainerDb(db, "База данных", "PostgreSQL", "Клиенты, счета, продукты, согласия, команды")
+}
+
+' Клиент
+Rel(client, client_ui, "Просмотр счетов", "HTTPS")
+Rel(client_ui, backend, "API запросы", "REST")
+Rel(client_ui, multibank_proxy, "Мультибанк запросы", "REST")
+
+' Multibank Proxy -> External Banks
+Rel(multibank_proxy, other_banks, "OpenBanking Flow\n(консенты, счета, балансы)", "HTTPS + RS256 JWT")
+
+' Банкир
+Rel(banker, banker_ui, "Управление банком", "HTTPS")
+Rel(banker_ui, backend, "Banker API", "REST")
+
+' Разработчик
+Rel(developer, developer_ui, "Регистрация команды", "HTTPS")
+Rel(developer_ui, backend, "POST /auth/register-team", "REST")
+
+' Backend
+Rel(backend, auth_service, "Проверка токенов", "Internal")
+Rel(backend, consent_service, "Проверка согласий", "Internal")
+Rel(backend, db, "CRUD операции", "SQL")
+
+' Services
+Rel(auth_service, db, "Хранение токенов и команд", "SQL")
+Rel(consent_service, db, "Хранение согласий", "SQL")
+
+' е-Каталог мониторинг
+Rel(directory, admin_api, "Опрос банков\n(capital, stats, transfers, payments)", "HTTPS")
+Rel(admin_api, db, "Чтение статистики", "SQL")
+
+' Interbank
+Rel(other_banks, backend, "Запросы к нашему банку", "HTTPS + RS256 JWT")
+Rel(other_banks, jwks, "Получение публичных ключей", "HTTPS")
+Rel(multibank_proxy, jwks, "Подпись токенов", "Internal")
+
+@enduml

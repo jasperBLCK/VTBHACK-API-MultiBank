@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход - Bank Client</title>
+    <link rel="stylesheet" href="theme-styles.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 { margin-bottom: 30px; color: #333; text-align: center; }
+        .bank-name { color: #667eea; font-size: 14px; text-align: center; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; color: #666; font-size: 14px; }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        input:focus { outline: none; border-color: #667eea; }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover { background: #5568d3; }
+        button.secondary {
+            background: #6c757d;
+            margin-top: 5px;
+        }
+        button.secondary:hover { background: #5a6268; }
+        .error { color: #e74c3c; font-size: 14px; margin-top: 10px; }
+        .hint { 
+            font-size: 12px; 
+            color: #999; 
+            margin-top: 15px; 
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="bank-name" id="bankName">Загрузка...</div>
+        <h1>Вход в личный кабинет</h1>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label>ID клиента</label>
+                <input type="text" id="username" placeholder="team200-1" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" id="password" placeholder="password" required>
+            </div>
+            
+            <button type="submit">Войти</button>
+            <button type="button" class="secondary" id="randomLogin">🎲 Войти как случайный клиент</button>
+            
+            <div class="hint" id="clientsHint">
+                Загрузка тестовых клиентов...
+            </div>
+            
+            <div class="error" id="error" style="display: none;"></div>
+        </form>
+    </div>
+
+    <script>
+        // API base URL
+        const apiBase = window.location.origin;
+        let testClients = [];
+        
+        // Загрузить информацию о банке
+        async function loadBankInfo() {
+            try {
+                const response = await fetch(`${apiBase}/`);
+                const data = await response.json();
+                document.getElementById('bankName').textContent = data.bank;
+            } catch (error) {
+                document.getElementById('bankName').textContent = 'Bank';
+            }
+        }
+        
+        // Загрузить список тестовых клиентов
+        async function loadTestClients() {
+            try {
+                // Пытаемся получить список клиентов через banker API (если доступно)
+                // В реальном банке этого не должно быть, но для демо удобно
+                const hintDiv = document.getElementById('clientsHint');
+                hintDiv.innerHTML = `
+                    <strong>Команда team200:</strong><br>
+                    team200-1, team200-2, team200-3, team200-4, team200-5<br>
+                    team200-6, team200-7, team200-8, team200-9, team200-10<br>
+                    <br><strong>Demo клиенты:</strong><br>
+                    demo-client-001, demo-client-002, demo-client-003<br>
+                    <br>Пароль для всех: <code>password</code>
+                `;
+                
+                testClients = [
+                    'team200-1', 'team200-2', 'team200-3', 'team200-4', 'team200-5',
+                    'team200-6', 'team200-7', 'team200-8', 'team200-9', 'team200-10',
+                    'demo-client-001', 'demo-client-002', 'demo-client-003'
+                ];
+            } catch (error) {
+                console.error('Could not load test clients:', error);
+            }
+        }
+        
+        // Вход под случайным клиентом
+        document.getElementById('randomLogin').addEventListener('click', () => {
+            if (testClients.length > 0) {
+                const randomClient = testClients[Math.floor(Math.random() * testClients.length)];
+                document.getElementById('username').value = randomClient;
+                document.getElementById('password').value = 'password';
+                
+                // Автоматически отправить форму
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        });
+        
+        // Обработка формы входа
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error');
+            
+            errorDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${apiBase}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Неверные учетные данные');
+                }
+                
+                const data = await response.json();
+                
+                // Сохранить токен
+                localStorage.setItem('access_token', data.access_token);
+                localStorage.setItem('client_id', data.client_id);
+                
+                // Перейти на dashboard
+                window.location.href = 'dashboard.html';
+                
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.style.display = 'block';
+            }
+        });
+        
+        // Инициализация при загрузке
+        loadBankInfo();
+        loadTestClients();
+    </script>
+    <script src="theme-switcher.js"></script>
+</body>
+</html>

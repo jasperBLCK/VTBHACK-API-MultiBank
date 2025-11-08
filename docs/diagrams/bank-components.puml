@@ -1,0 +1,93 @@
+@startuml bank-components
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Компоненты банка участника
+
+Container_Boundary(frontend, "Frontend (Web UI)") {
+    Component(client_ui, "UI Клиента", "HTML/JS", "Авторизация, баланс\nМультибанк")
+    Component(banker_ui, "Кабинет банкира", "HTML/JS", "Клиенты, продукты\nКоманды, мониторинг")
+    Component(developer_ui, "Developer Portal", "HTML", "Регистрация команд")
+}
+
+Container_Boundary(backend, "Backend API") {
+    Component(api_router, "API Router", "FastAPI", "Маршрутизация запросов")
+    
+    Component(auth_api, "Auth API", "Endpoint", "POST /auth/login\nPOST /auth/banker-login\nPOST /auth/register-team")
+    Component(accounts_api, "Accounts API", "Endpoint", "GET /accounts\nGET /accounts/{id}/balances")
+    Component(consents_api, "Consents API", "Endpoint", "POST /account-consents/request\nGET /account-consents/{id}\nDELETE /account-consents/{id}")
+    Component(payments_api, "Payments API", "Endpoint", "POST /payments\nGET /payments")
+    Component(products_api, "Products API", "Endpoint", "GET /products\nPUT /products/{id}")
+    
+    Component(banker_api, "Banker API", "Endpoint", "GET /banker/clients\nGET /banker/consents\nPUT /banker/products/{id}")
+    Component(admin_api, "Admin API", "Endpoint", "GET /admin/capital\nGET /admin/stats\nGET /admin/transfers\nGET /admin/payments")
+    Component(teams_api, "Teams API", "Endpoint", "GET /admin/teams\nPUT /admin/teams/{id}/suspend")
+    
+    Component(multibank_api, "Multibank Proxy", "Endpoint", "POST /multibank/bank-token\nPOST /multibank/request-consent\nPOST /multibank/accounts-with-consent\nPOST /multibank/balances-with-consent")
+    
+    Component(jwks_api, "JWKS", "Endpoint", "GET /.well-known/jwks.json\nПубличные ключи RS256")
+}
+
+Container_Boundary(services, "Services") {
+    Component(auth_service, "Auth Service", "OAuth2/JWT", "Клиенты: HS256\nБанки: RS256\nКоманды: HS256")
+    Component(consent_service, "Consent Service", "Logic", "OpenBanking Flow\nУправление согласиями")
+    Component(payment_service, "Payment Service", "Logic", "Создание платежей\nОтслеживание статусов")
+}
+
+ContainerDb(db, "PostgreSQL", "Database", "• clients\n• accounts\n• consents\n• payments\n• teams\n• tokens")
+
+System_Ext(directory, "е-Каталог", "Федеративная инфраструктура")
+System_Ext(other_banks, "Другие банки участников", "Федеративная сеть")
+
+' Frontend -> API Router
+Rel(client_ui, api_router, "REST API")
+Rel(banker_ui, api_router, "REST API")
+Rel(developer_ui, api_router, "POST /auth/register-team")
+
+' API Router -> Endpoints
+Rel(api_router, auth_api, "Route")
+Rel(api_router, accounts_api, "Route")
+Rel(api_router, consents_api, "Route")
+Rel(api_router, payments_api, "Route")
+Rel(api_router, products_api, "Route")
+Rel(api_router, banker_api, "Route")
+Rel(api_router, admin_api, "Route")
+Rel(api_router, teams_api, "Route")
+Rel(api_router, multibank_api, "Route")
+Rel(api_router, jwks_api, "Route")
+
+' Authentication
+Rel(api_router, auth_service, "Validate token")
+
+' Endpoints -> Services
+Rel(auth_api, auth_service, "Login / Register")
+Rel(accounts_api, consent_service, "Check consent")
+Rel(consents_api, consent_service, "Manage consents")
+Rel(payments_api, payment_service, "Create payment")
+
+' Services -> DB
+Rel(auth_service, db, "Store tokens, teams")
+Rel(consent_service, db, "Store consents")
+Rel(payment_service, db, "Store payments")
+
+' Endpoints -> DB
+Rel(accounts_api, db, "Query accounts")
+Rel(products_api, db, "Query/Update products")
+Rel(banker_api, db, "Query clients")
+Rel(admin_api, db, "Read stats")
+Rel(teams_api, db, "Manage teams")
+
+' Multibank
+Rel(client_ui, multibank_api, "Мультибанк запросы")
+Rel(multibank_api, other_banks, "OpenBanking Flow\n1. Bank Token\n2. Consent Request\n3. Accounts\n4. Balances")
+Rel(multibank_api, auth_service, "Generate RS256 JWT")
+
+' е-Каталог мониторинг
+Rel(directory, admin_api, "Опрос банков\nGET /admin/*")
+
+' JWKS Federation
+Rel(other_banks, jwks_api, "Получение публичных ключей")
+Rel(jwks_api, auth_service, "Load RSA keys")
+
+@enduml
