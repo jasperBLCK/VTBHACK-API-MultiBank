@@ -52,6 +52,8 @@
             /* Transitions */
             --transition-fast: 0.15s ease;
             --transition-normal: 0.3s ease;
+            --transition-slow: 0.5s ease;
+            --transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
             
             /* Sidebar */
             --sidebar-width: 260px;
@@ -80,6 +82,10 @@
             transition: background var(--transition-normal), color var(--transition-normal);
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         /* Header */
         .header {
             position: fixed;
@@ -95,6 +101,12 @@
             padding: 0 var(--spacing-lg);
             z-index: 100;
             box-shadow: var(--shadow-sm);
+            backdrop-filter: blur(10px);
+            transition: all var(--transition-normal);
+        }
+
+        .header:hover {
+            box-shadow: var(--shadow-md);
         }
 
         .header-left {
@@ -146,6 +158,13 @@
             color: white;
             font-weight: 600;
             font-size: 14px;
+            transition: all var(--transition-normal);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
         }
 
         .user-name {
@@ -154,7 +173,7 @@
             color: var(--text-primary);
         }
 
-        .theme-toggle, .logout-btn {
+        .theme-toggle, .logout-btn, .braille-toggle {
             padding: var(--spacing-sm);
             background: none;
             border: 1px solid var(--border-color);
@@ -165,9 +184,65 @@
             color: var(--text-primary);
         }
 
-        .theme-toggle:hover, .logout-btn:hover {
+        .theme-toggle:hover, .logout-btn:hover, .braille-toggle:hover {
             background: var(--bg-hover);
             transform: scale(1.05);
+        }
+
+        .braille-toggle.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.5);
+            animation: braillePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes braillePulse {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(102, 126, 234, 0.5);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(102, 126, 234, 0.8);
+                transform: scale(1.05);
+            }
+        }
+
+        /* Стили для режима Брайля - визуальные точки */
+        .braille-mode {
+            /* Не меняем структуру, только текст */
+        }
+
+        .braille-text {
+            font-family: 'Courier New', monospace;
+            font-size: 0.6em;
+            letter-spacing: 0.2px;
+            line-height: 1.2;
+            white-space: pre-wrap;
+            word-spacing: 1px;
+        }
+        
+        /* Для заголовков делаем немного больше, но все равно компактно */
+        h1.braille-text, h2.braille-text, h3.braille-text {
+            font-size: 0.65em;
+            line-height: 1.3;
+        }
+        
+        /* Еще более компактное отображение для маленьких элементов */
+        span.braille-text, a.braille-text, button.braille-text {
+            font-size: 0.55em;
+        }
+
+        /* Маленький текст Брайля рядом с балансами */
+        .braille-balance {
+            display: inline-block;
+            font-family: 'Courier New', monospace;
+            font-size: 0.5em;
+            color: var(--text-muted);
+            opacity: 0.6;
+            margin-left: 8px;
+            vertical-align: middle;
+            letter-spacing: 0.1px;
+            line-height: 1;
         }
 
         /* Sidebar */
@@ -199,18 +274,45 @@
             text-decoration: none;
             color: var(--text-secondary);
             font-weight: 500;
-            transition: all var(--transition-fast);
+            transition: all var(--transition-normal);
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: var(--primary-color);
+            transform: scaleY(0);
+            transition: transform var(--transition-normal);
         }
 
         .nav-item:hover {
             background: var(--bg-hover);
             color: var(--text-primary);
+            padding-left: calc(var(--spacing-md) + 8px);
+            transform: translateX(4px);
+        }
+
+        .nav-item:hover::before {
+            transform: scaleY(1);
         }
 
         .nav-item.active {
             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
             color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active::before {
+            transform: scaleY(1);
+            background: white;
         }
 
         .nav-icon {
@@ -242,11 +344,31 @@
             padding: var(--spacing-lg);
             box-shadow: var(--shadow-sm);
             transition: all var(--transition-normal);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
         }
 
+        .summary-card:nth-child(1) { animation-delay: 0.1s; }
+        .summary-card:nth-child(2) { animation-delay: 0.2s; }
+        .summary-card:nth-child(3) { animation-delay: 0.3s; }
+        .summary-card:nth-child(4) { animation-delay: 0.4s; }
+
         .summary-card:hover {
-            box-shadow: var(--shadow-md);
-            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--primary-color);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .summary-card.primary {
@@ -286,7 +408,20 @@
             padding: var(--spacing-xl);
             margin-bottom: var(--spacing-xl);
             box-shadow: var(--shadow-sm);
+            transition: all var(--transition-normal);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
         }
+
+        .section:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .section:nth-of-type(1) { animation-delay: 0.1s; }
+        .section:nth-of-type(2) { animation-delay: 0.2s; }
+        .section:nth-of-type(3) { animation-delay: 0.3s; }
+        .section:nth-of-type(4) { animation-delay: 0.4s; }
 
         .section-header {
             display: flex;
@@ -303,27 +438,52 @@
 
         /* Buttons */
         .btn {
-            padding: var(--spacing-sm) var(--spacing-lg);
+            padding: var(--spacing-md) var(--spacing-lg);
             border: none;
             border-radius: var(--border-radius-sm);
-            font-weight: 500;
+            font-weight: 600;
             font-size: 14px;
             cursor: pointer;
-            transition: all var(--transition-fast);
+            transition: all var(--transition-normal);
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: var(--spacing-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:active::before {
+            width: 300px;
+            height: 300px;
         }
 
         .btn-primary {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
             color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
         .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px) scale(1.02);
         }
 
         .btn-secondary {
@@ -333,17 +493,31 @@
         }
 
         .btn-secondary:hover {
-            background: var(--bg-card);
+            background: var(--border-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .btn-danger {
-            background: var(--danger-color);
+            background: linear-gradient(135deg, var(--danger-color), #c0392b);
             color: white;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.5);
         }
 
         .btn-success {
-            background: var(--success-color);
+            background: linear-gradient(135deg, var(--success-color), #27ae60);
             color: white;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(46, 204, 113, 0.5);
         }
 
         .btn-sm {
@@ -365,11 +539,50 @@
             padding: var(--spacing-lg);
             transition: all var(--transition-normal);
             cursor: pointer;
+            opacity: 0;
+            transform: scale(0.95);
+            animation: cardAppear 0.5s ease forwards;
+            position: relative;
+            overflow: hidden;
         }
 
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .card:hover::before {
+            left: 100%;
+        }
+
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.15s; }
+        .card:nth-child(3) { animation-delay: 0.2s; }
+        .card:nth-child(4) { animation-delay: 0.25s; }
+        .card:nth-child(5) { animation-delay: 0.3s; }
+        .card:nth-child(6) { animation-delay: 0.35s; }
+
         .card:hover {
-            box-shadow: var(--shadow-md);
-            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--primary-color);
+        }
+
+        @keyframes cardAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
         .card-header {
@@ -396,6 +609,14 @@
             font-weight: 700;
             color: var(--success-color);
             margin-bottom: var(--spacing-md);
+            transition: all var(--transition-normal);
+            display: inline-block;
+        }
+
+        .card:hover .card-balance {
+            transform: scale(1.05);
+            color: var(--success-color);
+            text-shadow: 0 0 20px rgba(46, 204, 113, 0.3);
         }
 
         .card-actions {
@@ -417,6 +638,17 @@
             align-items: center;
             padding: var(--spacing-sm) 0;
             font-size: 13px;
+            transition: all var(--transition-fast);
+            border-radius: var(--border-radius-sm);
+            padding-left: var(--spacing-sm);
+            padding-right: var(--spacing-sm);
+            margin-left: calc(var(--spacing-sm) * -1);
+            margin-right: calc(var(--spacing-sm) * -1);
+        }
+
+        .transaction-item:hover {
+            background: var(--bg-hover);
+            transform: translateX(4px);
         }
 
         .transaction-desc {
@@ -467,13 +699,24 @@
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: var(--shadow-lg);
-            animation: slideUp 0.3s ease;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideUp 0.4s var(--transition-bounce);
+            position: relative;
         }
 
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        @keyframes modalSlideUp {
+            from { 
+                transform: translateY(50px) scale(0.9); 
+                opacity: 0; 
+            }
+            to { 
+                transform: translateY(0) scale(1); 
+                opacity: 1; 
+            }
+        }
+
+        .modal.active .modal-content {
+            animation: modalSlideUp 0.4s var(--transition-bounce);
         }
 
         .modal-header {
@@ -499,10 +742,17 @@
             padding: 0;
             width: 32px;
             height: 32px;
+            border-radius: 50%;
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .close-btn:hover {
             color: var(--text-primary);
+            background: var(--bg-hover);
+            transform: rotate(90deg) scale(1.1);
         }
 
         .form-group {
@@ -520,17 +770,19 @@
         .form-input, .form-select {
             width: 100%;
             padding: var(--spacing-md);
-            border: 1px solid var(--border-color);
+            border: 2px solid var(--border-color);
             border-radius: var(--border-radius-sm);
             font-size: 14px;
             background: var(--bg-app);
             color: var(--text-primary);
-            transition: border-color var(--transition-fast);
+            transition: all var(--transition-normal);
         }
 
         .form-input:focus, .form-select:focus {
             outline: none;
             border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
         }
 
         .form-hint {
@@ -555,8 +807,60 @@
         }
 
         @keyframes slideInRight {
-            from { transform: translateX(100%); }
-            to { transform: translateX(0); }
+            from { 
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to { 
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Pulse animation for important elements */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--bg-hover);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Number counter animation */
+        .balance-counter {
+            display: inline-block;
+            transition: all var(--transition-normal);
+        }
+
+        .balance-counter.updated {
+            animation: numberPop 0.5s ease;
+        }
+
+        @keyframes numberPop {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); color: var(--success-color); }
         }
 
         .toast.success { border-left-color: var(--success-color); }
@@ -576,20 +880,49 @@
 
         /* Loading skeleton */
         .skeleton {
-            background: linear-gradient(90deg, var(--bg-hover) 25%, var(--bg-app) 50%, var(--bg-hover) 75%);
+            background: linear-gradient(90deg, 
+                var(--bg-hover) 0%, 
+                rgba(255, 255, 255, 0.1) 50%, 
+                var(--bg-hover) 100%);
             background-size: 200% 100%;
-            animation: loading 1.5s ease-in-out infinite;
+            animation: shimmer 1.5s ease-in-out infinite;
             border-radius: var(--border-radius-sm);
+            position: relative;
+            overflow: hidden;
         }
 
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
         }
 
         .skeleton-card {
             height: 200px;
             border-radius: var(--border-radius-md);
+            animation: skeletonPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes skeletonPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .skeleton-text {
+            height: 16px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+
+        .skeleton-title {
+            height: 24px;
+            width: 60%;
+            margin-bottom: 12px;
+        }
+
+        .skeleton-balance {
+            height: 36px;
+            width: 40%;
+            margin-bottom: 16px;
         }
 
         /* Empty state */
@@ -603,6 +936,12 @@
             font-size: 48px;
             margin-bottom: var(--spacing-md);
             opacity: 0.5;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
 
         /* Mobile Bottom Nav */
@@ -659,11 +998,20 @@
             border-radius: var(--border-radius-md);
             padding: var(--spacing-lg);
             transition: all var(--transition-normal);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s ease forwards;
         }
 
+        .product-card:nth-child(1) { animation-delay: 0.1s; }
+        .product-card:nth-child(2) { animation-delay: 0.2s; }
+        .product-card:nth-child(3) { animation-delay: 0.3s; }
+        .product-card:nth-child(4) { animation-delay: 0.4s; }
+
         .product-card:hover {
-            box-shadow: var(--shadow-md);
-            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--primary-color);
         }
 
         .product-badge {
@@ -824,6 +1172,7 @@
                 <span class="user-name" id="userName">Клиент</span>
     </div>
             <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+            <button class="braille-toggle" onclick="toggleBrailleMode()" title="Переключить на шрифт Брайля (точки)">👁️‍🗨️</button>
             <button class="logout-btn" onclick="logout()" title="Выйти">🚪</button>
         </div>
     </header>
@@ -854,6 +1203,10 @@
             <a href="consents.html" class="nav-item">
                 <span class="nav-icon">🔐</span>
                 <span>Согласия</span>
+            </a>
+            <a href="braille.html" class="nav-item">
+                <span class="nav-icon">👁️‍🗨️</span>
+                <span>Брайль</span>
             </a>
         </nav>
     </aside>
@@ -1023,9 +1376,9 @@
                 <span class="bottom-nav-icon">💸</span>
                 <span>Переводы</span>
             </a>
-            <a href="consents.html" class="bottom-nav-item">
-                <span class="bottom-nav-icon">🔐</span>
-                <span>Еще</span>
+            <a href="braille.html" class="bottom-nav-item">
+                <span class="bottom-nav-icon">👁️‍🗨️</span>
+                <span>Брайль</span>
             </a>
         </div>
     </nav>
@@ -1224,6 +1577,291 @@
             window.location.href = 'index.html';
         }
 
+        // Переключение на шрифт Брайля (точки) - юмор
+        let brailleMode = false;
+        const originalTexts = new Map();
+
+        function toggleBrailleMode() {
+            brailleMode = !brailleMode;
+            const btn = document.querySelector('.braille-toggle');
+            
+            if (brailleMode) {
+                btn.classList.add('active');
+                document.body.classList.add('braille-mode');
+                convertPageToBraille();
+            } else {
+                btn.classList.remove('active');
+                document.body.classList.remove('braille-mode');
+                restorePageFromBraille();
+            }
+        }
+
+        // Таблица кодов Брайля (6-битное представление)
+        // Битовая маска: позиции точек в ячейке 2x3
+        // 1 4
+        // 2 5
+        // 3 6
+        const brailleMap = {
+            ' ': 0, 'а': 1, 'б': 3, 'в': 9, 'г': 25, 'д': 17, 'е': 11, 'ё': 11,
+            'ж': 27, 'з': 19, 'и': 10, 'й': 26, 'к': 5, 'л': 7, 'м': 13, 'н': 29,
+            'о': 15, 'п': 23, 'р': 21, 'с': 14, 'т': 30, 'у': 18, 'ф': 31, 'х': 22,
+            'ц': 6, 'ч': 28, 'ш': 20, 'щ': 12, 'ъ': 24, 'ы': 16, 'ь': 8, 'э': 4,
+            'ю': 2, 'я': 53,
+            'a': 1, 'b': 3, 'c': 9, 'd': 25, 'e': 11, 'f': 27, 'g': 19, 'h': 10,
+            'i': 26, 'j': 5, 'k': 7, 'l': 13, 'm': 29, 'n': 15, 'o': 23, 'p': 21,
+            'q': 14, 'r': 30, 's': 18, 't': 31, 'u': 22, 'v': 6, 'w': 28, 'x': 20,
+            'y': 12, 'z': 24,
+            '0': 16, '1': 1, '2': 3, '3': 9, '4': 25, '5': 17, '6': 11, '7': 27,
+            '8': 19, '9': 10, '.': 4, ',': 2, '!': 6, '?': 8, ':': 12, ';': 14,
+            '-': 16, '(': 20, ')': 22
+        };
+
+        function getBrailleCode(char) {
+            const lowerChar = char.toLowerCase();
+            return brailleMap[lowerChar] !== undefined ? brailleMap[lowerChar] : 0;
+        }
+
+        // Компактное визуальное представление ячейки Брайля (в одну строку)
+        function renderBrailleCell(code) {
+            const bitPositions = { 1: 1, 2: 2, 3: 4, 4: 8, 5: 16, 6: 32 };
+            // Компактное представление: используем маленькие символы
+            // Верхний ряд (1,4), средний ряд (2,5), нижний ряд (3,6)
+            const dot1 = (code & bitPositions[1]) ? '●' : '○';
+            const dot4 = (code & bitPositions[4]) ? '●' : '○';
+            const dot2 = (code & bitPositions[2]) ? '●' : '○';
+            const dot5 = (code & bitPositions[5]) ? '●' : '○';
+            const dot3 = (code & bitPositions[3]) ? '●' : '○';
+            const dot6 = (code & bitPositions[6]) ? '●' : '○';
+            
+            // Очень компактный формат: все точки в одну строку без пробелов
+            return `${dot1}${dot4}${dot2}${dot5}${dot3}${dot6}`;
+        }
+
+        function textToBraille(text) {
+            if (!text) return '';
+            let result = '';
+            
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                
+                // Пропускаем эмодзи
+                if (char.match(/[\u{1F300}-\u{1F9FF}]/u)) {
+                    result += char;
+                    continue;
+                }
+                
+                // Пробел остается пробелом
+                if (char === ' ') {
+                    result += ' ';
+                    continue;
+                }
+                
+                const code = getBrailleCode(char);
+                const braille = renderBrailleCell(code);
+                result += braille;
+            }
+            
+            return result;
+        }
+
+        // Функция для добавления Брайля рядом с балансом
+        function addBrailleToBalance(element, balanceText) {
+            if (!element || !balanceText) return;
+            
+            // Убираем старый Брайль если есть
+            const oldBraille = element.querySelector('.braille-balance');
+            if (oldBraille) {
+                oldBraille.remove();
+            }
+            
+            // Создаем элемент с Брайлем
+            const brailleSpan = document.createElement('span');
+            brailleSpan.className = 'braille-balance';
+            
+            // Конвертируем текст баланса в Брайль (только цифры и символы)
+            const brailleText = textToBraille(balanceText);
+            brailleSpan.textContent = brailleText;
+            
+            // Добавляем Брайль к элементу
+            element.appendChild(brailleSpan);
+        }
+
+        // Функция для обновления балансов с Брайлем
+        function updateBalancesWithBraille() {
+            // Общий баланс
+            const totalBalanceEl = document.getElementById('totalBalance');
+            if (totalBalanceEl) {
+                const balanceText = totalBalanceEl.textContent.replace(/\s/g, ' ').trim();
+                addBrailleToBalance(totalBalanceEl, balanceText);
+            }
+            
+            // Балансы на карточках счетов
+            const cardBalances = document.querySelectorAll('.card-balance');
+            cardBalances.forEach(el => {
+                const balanceText = el.textContent.replace(/[^\d.,₽\s]/g, '').trim();
+                if (balanceText) {
+                    addBrailleToBalance(el, balanceText);
+                }
+            });
+            
+            // Балансы в продуктах
+            const productAmounts = document.querySelectorAll('.product-amount');
+            productAmounts.forEach(el => {
+                const balanceText = el.textContent.replace(/[^\d.,₽\s]/g, '').trim();
+                if (balanceText) {
+                    addBrailleToBalance(el, balanceText);
+                }
+            });
+            
+            // Баланс при закрытии счета
+            const closeBalanceEl = document.getElementById('closeAccountBalance');
+            if (closeBalanceEl) {
+                const balanceText = closeBalanceEl.textContent.replace(/\s/g, ' ').trim();
+                addBrailleToBalance(closeBalanceEl, balanceText);
+            }
+            
+            // Информация о балансе
+            const balanceInfoEls = document.querySelectorAll('#balanceInfo, #repaymentBalanceInfo');
+            balanceInfoEls.forEach(el => {
+                if (el.textContent && el.textContent.includes('₽')) {
+                    const balanceText = el.textContent.replace(/[^\d.,₽\sДоступно:]/g, '').trim();
+                    if (balanceText) {
+                        addBrailleToBalance(el, balanceText);
+                    }
+                }
+            });
+        }
+
+        function convertPageToBraille() {
+            // Находим только текстовые элементы, НЕ трогаем таблицы, балансы, изображения
+            const textSelectors = 'h1, h2, h3, h4, h5, h6, p, span, a, button, label, .nav-item span, .card-title, .card-subtitle, .summary-title, .summary-label';
+            
+            const textElements = document.querySelectorAll(textSelectors);
+            
+            textElements.forEach(element => {
+                // Пропускаем защищенные элементы
+                if (shouldSkipElement(element)) {
+                    return;
+                }
+                
+                const originalText = element.textContent || element.innerText || '';
+                
+                // Пропускаем пустые элементы
+                if (!originalText.trim() || originalText.trim().length === 0) {
+                    return;
+                }
+                
+                // Пропускаем элементы с только цифрами, валютами
+                if (originalText.match(/^[\d\s.,₽$€¥%-]+$/)) {
+                    return;
+                }
+                
+                // Пропускаем длинные числа (номера счетов)
+                if (originalText.match(/^\d{10,}/) || originalText.match(/\d{4,}/)) {
+                    return;
+                }
+                
+                // Пропускаем таблицы полностью
+                if (element.closest('table')) {
+                    return;
+                }
+                
+                // Сохраняем оригинальный текст
+                if (!originalTexts.has(element)) {
+                    originalTexts.set(element, originalText);
+                }
+                
+                // Конвертируем в Брайль
+                const brailleText = textToBraille(originalText);
+                if (brailleText && brailleText.trim().length > 0) {
+                    element.textContent = brailleText;
+                    element.classList.add('braille-text');
+                }
+            });
+        }
+
+        function shouldSkipElement(element) {
+            // Пропускаем элементы с защитными классами
+            if (element.classList.contains('braille-ignore') ||
+                element.closest('.braille-ignore')) {
+                return true;
+            }
+            
+            // Пропускаем элементы внутри защищенных контейнеров
+            const protectedContainers = [
+                'table', 'td', 'th', 'tbody', 'thead', 'tr',
+                '.transaction-item', '.balance', '.amount', 
+                '.account-number', '.card-balance', '.summary-value',
+                '.stat-value', '.stat-label', '.balance-counter',
+                '.product-amount', '.transaction-amount',
+                '.balanceInfo', '#totalBalance', '#accountsCount',
+                '#productsCount', '#transfersCount'
+            ];
+            
+            for (const selector of protectedContainers) {
+                if (element.closest(selector) || element.matches(selector)) {
+                    return true;
+                }
+            }
+            
+            // Пропускаем элементы с ID, которые содержат балансы
+            const protectedIds = [
+                'totalBalance', 'accountsCount', 'productsCount', 'transfersCount',
+                'closeAccountBalance', 'loanDebt', 'balanceInfo'
+            ];
+            
+            if (protectedIds.includes(element.id)) {
+                return true;
+            }
+            
+            // Пропускаем элементы с классами, связанными с балансами и суммами
+            const protectedClasses = [
+                'balance', 'amount', 'account-number', 'card-balance',
+                'summary-value', 'stat-value', 'transaction-amount',
+                'account-balance', 'balance-value', 'balance-counter',
+                'product-amount', 'balanceInfo'
+            ];
+            
+            for (const className of protectedClasses) {
+                if (element.classList.contains(className) || 
+                    element.closest('.' + className)) {
+                    return true;
+                }
+            }
+            
+            // Пропускаем изображения и иконки
+            if (element.tagName === 'IMG' || 
+                element.querySelector('img') ||
+                element.closest('img')) {
+                return true;
+            }
+            
+            // Пропускаем элементы input, select, textarea
+            if (element.tagName === 'INPUT' || 
+                element.tagName === 'SELECT' || 
+                element.tagName === 'TEXTAREA') {
+                return true;
+            }
+            
+            // Пропускаем элементы внутри форм
+            if (element.closest('form')) {
+                // Но пропускаем только поля ввода, labels можно конвертировать
+                if (element.tagName !== 'LABEL') {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        function restorePageFromBraille() {
+            originalTexts.forEach((originalText, element) => {
+                element.textContent = originalText;
+                element.classList.remove('braille-text');
+            });
+            originalTexts.clear();
+        }
+
         // Toast notification
         function showToast(message, type = 'info', title = '') {
             const toast = document.createElement('div');
@@ -1257,6 +1895,8 @@
                 
                 await displayAccounts(accountsData);
                 updateSummary();
+                // Обновляем Брайль для балансов после загрузки
+                setTimeout(() => updateBalancesWithBraille(), 200);
 
             } catch (error) {
                 console.error('Error loading accounts:', error);
@@ -1281,7 +1921,9 @@
             grid.classList.remove('hidden');
             grid.innerHTML = '';
 
-            for (const account of accounts) {
+            for (let index = 0; index < accounts.length; index++) {
+                const account = accounts[index];
+                
                 // Get balance
                 let balance;
                 try {
@@ -1310,6 +1952,10 @@
 
                 const card = document.createElement('div');
                 card.className = 'card';
+                // Добавляем задержку для анимации появления
+                card.style.animationDelay = `${index * 0.05}s`;
+                const balanceAmount = parseFloat(balance.amount.amount);
+                const balanceText = `${balanceAmount.toLocaleString('ru-RU')} ₽`;
                 card.innerHTML = `
                     <div class="card-header">
                         <div>
@@ -1321,7 +1967,7 @@
                         </button>
                     </div>
                     <div class="card-balance">
-                        ${parseFloat(balance.amount.amount).toLocaleString('ru-RU')} ₽
+                        ${balanceText}
                     </div>
                     ${transactions.length > 0 ? `
                     <div class="transaction-list">
@@ -1338,6 +1984,12 @@
                     ` : ''}
                 `;
                 grid.appendChild(card);
+                
+                // Добавляем Брайль к балансу после добавления карточки в DOM
+                const cardBalanceEl = card.querySelector('.card-balance');
+                if (cardBalanceEl) {
+                    addBrailleToBalance(cardBalanceEl, balanceText);
+                }
             }
         }
 
@@ -1404,7 +2056,7 @@
                     <div class="product-card">
                         <span class="product-badge ${agr.product_type}">${typeLabels[agr.product_type] || agr.product_type}</span>
                         <div class="product-name">${typeEmojis[agr.product_type]} ${agr.product_name}</div>
-                        <div class="product-amount">${agr.amount.toLocaleString('ru-RU')} ₽</div>
+                        <div class="product-amount" data-amount="${agr.amount.toLocaleString('ru-RU')} ₽">${agr.amount.toLocaleString('ru-RU')} ₽</div>
                         ${agr.account_number ? `<div style="font-size: 12px; color: var(--text-muted); font-family: monospace; margin-bottom: var(--spacing-sm);">Счет: ${agr.account_number}</div>` : ''}
                         ${agr.end_date ? `
                             <div class="progress-bar">
@@ -1433,6 +2085,17 @@
                     </div>
                 `;
             }).join('');
+            
+            // Добавляем Брайль к балансам продуктов после рендеринга
+            setTimeout(() => {
+                const productAmounts = container.querySelectorAll('.product-amount');
+                productAmounts.forEach(el => {
+                    const amountText = el.getAttribute('data-amount') || el.textContent.trim();
+                    if (amountText) {
+                        addBrailleToBalance(el, amountText);
+                    }
+                });
+            }, 100);
         }
 
         let accountBalancesCache = new Map();
@@ -1450,7 +2113,10 @@
                 totalBalance += balance;
             }
             
-            document.getElementById('totalBalance').textContent = `${totalBalance.toLocaleString('ru-RU')} ₽`;
+            const totalBalanceText = `${totalBalance.toLocaleString('ru-RU')} ₽`;
+            const totalBalanceEl = document.getElementById('totalBalance');
+            totalBalanceEl.textContent = totalBalanceText;
+            addBrailleToBalance(totalBalanceEl, totalBalanceText);
         }
 
         // Account management
@@ -1525,7 +2191,10 @@
                 closingAccountNumber = accountNumber;
                 closingAccountBalance = balance;
                 
-                document.getElementById('closeAccountBalance').textContent = `${balance.toLocaleString('ru-RU')} ₽`;
+                const closeBalanceText = `${balance.toLocaleString('ru-RU')} ₽`;
+                const closeBalanceEl = document.getElementById('closeAccountBalance');
+                closeBalanceEl.textContent = closeBalanceText;
+                addBrailleToBalance(closeBalanceEl, closeBalanceText);
                 document.getElementById('closeAccountNumber').textContent = accountNumber;
                 
                 // Заполнить список других счетов
@@ -1739,7 +2408,9 @@
                     const balanceData = await balanceResponse.json();
                     const balance = parseFloat(balanceData.data.balance[0].amount.amount);
                     
-                    balanceInfo.textContent = `Доступно: ${balance.toLocaleString('ru-RU')} ₽`;
+                    const balanceInfoText = `Доступно: ${balance.toLocaleString('ru-RU')} ₽`;
+                    balanceInfo.textContent = balanceInfoText;
+                    addBrailleToBalance(balanceInfo, balance.toLocaleString('ru-RU') + ' ₽');
                     
                     if (amount > balance) {
                         insufficientDiv.classList.remove('hidden');
@@ -1932,7 +2603,9 @@ ${agr.end_date ? `📅 Дата закрытия: ${new Date(agr.end_date).toLoc
                     const balanceData = await balanceResponse.json();
                     const balance = parseFloat(balanceData.data.balance[0].amount.amount);
                     
-                    balanceInfo.textContent = `Доступно: ${balance.toLocaleString('ru-RU')} ₽`;
+                    const balanceInfoText3 = `Доступно: ${balance.toLocaleString('ru-RU')} ₽`;
+                    balanceInfo.textContent = balanceInfoText3;
+                    addBrailleToBalance(balanceInfo, balance.toLocaleString('ru-RU') + ' ₽');
                     
                     if (balance < closingAgreementDebt) {
                         insufficientDiv.classList.remove('hidden');
@@ -2488,11 +3161,12 @@ ${agr.end_date ? `📅 Дата закрытия: ${new Date(agr.end_date).toLoc
                 return;
             }
 
+            const totalBalanceTextMulti = `${totalBalance.toLocaleString('ru-RU')} ₽`;
             container.innerHTML = `
                 <div style="background: linear-gradient(135deg, var(--info-color), var(--primary-color)); padding: var(--spacing-lg); border-radius: var(--border-radius-md); margin-bottom: var(--spacing-md); color: white;">
                     <div style="font-size: 14px; margin-bottom: 8px; opacity: 0.9;">Всего во всех банках</div>
-                    <div style="font-size: 36px; font-weight: 700;">
-                        ${totalBalance.toLocaleString('ru-RU')} ₽
+                    <div style="font-size: 36px; font-weight: 700;" id="multiBankTotalBalance">
+                        ${totalBalanceTextMulti}
                     </div>
                     <div style="font-size: 13px; margin-top: 8px; opacity: 0.9;">
                         Счетов: ${allAccounts.length} • Банков: ${new Set(allAccounts.map(a => a.bank)).size}
@@ -2530,7 +3204,7 @@ ${agr.end_date ? `📅 Дата закрытия: ${new Date(agr.end_date).toLoc
                                 <div style="font-size: 11px; color: var(--text-secondary);">${acc.type}</div>
                                 ${acc.clientId ? `<div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">client_id: ${acc.clientId}</div>` : ''}
                             </div>
-                            <div style="font-size: 20px; font-weight: 700; color: var(--success-color);">
+                            <div style="font-size: 20px; font-weight: 700; color: var(--success-color);" class="multibank-balance" data-balance="${acc.balance.toLocaleString('ru-RU')} ₽">
                                 ${acc.balance.toLocaleString('ru-RU')} ₽
                             </div>
                         </div>
@@ -2539,7 +3213,26 @@ ${agr.end_date ? `📅 Дата закрытия: ${new Date(agr.end_date).toLoc
             `;
             
             // Update total balance in summary
-            document.getElementById('totalBalance').textContent = `${totalBalance.toLocaleString('ru-RU')} ₽`;
+            const totalBalanceTextFinal = `${totalBalance.toLocaleString('ru-RU')} ₽`;
+            const totalBalanceElFinal = document.getElementById('totalBalance');
+            totalBalanceElFinal.textContent = totalBalanceTextFinal;
+            addBrailleToBalance(totalBalanceElFinal, totalBalanceTextFinal);
+            
+            // Добавляем Брайль к балансам после рендеринга
+            setTimeout(() => {
+                const multiBankBalanceEl = document.getElementById('multiBankTotalBalance');
+                if (multiBankBalanceEl) {
+                    addBrailleToBalance(multiBankBalanceEl, totalBalanceTextMulti);
+                }
+                
+                const multibankBalances = container.querySelectorAll('.multibank-balance');
+                multibankBalances.forEach(el => {
+                    const balanceText = el.getAttribute('data-balance');
+                    if (balanceText) {
+                        addBrailleToBalance(el, balanceText);
+                    }
+                });
+            }, 100);
         }
 
         // === Transactions History ===
@@ -2662,6 +3355,15 @@ ${agr.end_date ? `📅 Дата закрытия: ${new Date(agr.end_date).toLoc
             await loadAccounts();
             await loadProductAgreements();
             await loadAllTransactions();
+            
+            // Обновляем Брайль для всех балансов после загрузки всех данных
+            setTimeout(() => updateBalancesWithBraille(), 500);
+            
+            // Проверяем, нужно ли включить режим Брайля
+            if (localStorage.getItem('brailleMode') === 'true') {
+                toggleBrailleMode();
+                localStorage.removeItem('brailleMode'); // Сбрасываем флаг после активации
+            }
         }
         
         initDashboard();
