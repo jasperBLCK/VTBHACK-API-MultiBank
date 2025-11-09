@@ -4,7 +4,7 @@ OpenBanking Russia v2.1 compatible
 """
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from typing import Optional, List
 from datetime import datetime
 from pydantic import BaseModel
@@ -531,4 +531,52 @@ async def close_account_with_balance(
             "message": f"Account closed with {request.action} action"
         }
     }
+
+
+@router.delete("/{account_id}", status_code=204, summary="Удалить счет")
+async def delete_account(
+    account_id: str,
+    current_client: dict = Depends(get_current_client),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Удаление счета клиента
+    Возвращает 204 No Content при успехе
+    """
+    # Извлекаем ID из строки "acc-123" или просто число
+    if account_id.startswith("acc-"):
+        acc_id = int(account_id.replace("acc-", ""))
+    else:
+        acc_id = int(account_id)
+    
+    # Получаем клиента
+    client_result = await db.execute(
+        select(Client).where(Client.person_id == current_client["client_id"])
+    )
+    client = client_result.scalar_one_or_none()
+    
+    if not client:
+        raise HTTPException(401, "Unauthorized")
+    
+    # Получаем счет
+    result = await db.execute(
+        select(Account).where(
+            and_(Account.id == acc_id, Account.client_id == client.id)
+        )
+    )
+    account = result.scalar_one_or_none()
+    
+    if not account:
+        raise HTTPException(404, "Account not found")
+    
+    # Логируем удаление
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Удаление счета ID={acc_id} для client_id={current_client['client_id']}")
+    
+    # Удаляем счет из БД
+    await db.delete(account)
+    await db.commit()
+    
+    return None
 

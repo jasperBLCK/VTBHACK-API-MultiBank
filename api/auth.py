@@ -2,6 +2,7 @@
 Auth API - Авторизация клиентов
 """
 from typing import Optional
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Form, Query
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,7 +10,7 @@ from sqlalchemy import select, func
 
 from config import config
 from database import get_db
-from models import Client, Team
+from models import Client, Team, Account
 from services.auth_service import create_access_token, hash_password, verify_password, get_current_client
 
 
@@ -62,6 +63,51 @@ async def login(
     )
     client = result.scalar_one_or_none()
     
+    # Если клиент не найден, но это команда team251 - создаем клиента автоматически
+    if not client and request.username.startswith("team"):
+        import re
+        match = re.match(r'(team\d+)-\d+', request.username)
+        if match:
+            team_id = match.group(1)
+            # Если это команда из конфига, создаем клиента автоматически
+            if team_id == config.TEAM_CLIENT_ID:
+                # Создаем клиента
+                client = Client(
+                    person_id=request.username,
+                    client_type="INDIVIDUAL",
+                    full_name=f"Клиент команды {team_id}",
+                    segment="MASS",
+                    birth_year=1995,
+                    monthly_income=100000,
+                    created_at=datetime.utcnow()
+                )
+                db.add(client)
+                await db.flush()
+                
+                # Генерируем номер счета на основе person_id
+                # Формат: 40817 + последние 14 символов из person_id (без дефисов)
+                person_id_clean = request.username.replace('-', '').replace('team', '')
+                account_number = f"40817{person_id_clean.zfill(14)[:14]}"
+                
+                # Создаем счет для клиента
+                account = Account(
+                    client_id=client.id,
+                    account_number=account_number,
+                    account_type="checking",
+                    balance=500000.00,
+                    currency="RUB",
+                    status="active",
+                    opened_at=datetime.utcnow()
+                )
+                db.add(account)
+                await db.commit()
+                
+                # Перезагружаем клиента
+                result = await db.execute(
+                    select(Client).where(Client.person_id == request.username)
+                )
+                client = result.scalar_one_or_none()
+    
     if not client:
         raise HTTPException(401, "Invalid credentials")
     
@@ -92,8 +138,12 @@ async def login(
                 # Используем client_secret из таблицы teams как пароль
                 expected_password = team.client_secret
             else:
-                # Команда не найдена в БД - используем fallback "password" для локальной разработки
-                expected_password = "password"
+                # Команда не найдена в БД - используем секрет из конфига для team251
+                if team_id == config.TEAM_CLIENT_ID and config.TEAM_CLIENT_SECRET:
+                    expected_password = config.TEAM_CLIENT_SECRET
+                else:
+                    # Fallback для других команд
+                    expected_password = "password"
         else:
             # Неправильный формат - используем fallback
             expected_password = "password"
