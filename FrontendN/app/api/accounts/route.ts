@@ -14,13 +14,14 @@ async function proxyRequest(
     // Получаем токен из заголовка Authorization
     const authHeader = req.headers.get('authorization')
     
-    const headers: HeadersInit = {
+    // Use Record<string, string> to allow dynamic property assignment
+    const headersRecord: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string> || {}),
     }
     
     if (authHeader) {
-      headers['Authorization'] = authHeader
+      headersRecord['Authorization'] = authHeader
     }
     
     // Получаем тело запроса если есть
@@ -35,7 +36,7 @@ async function proxyRequest(
     
     const response = await fetch(url, {
       ...options,
-      headers,
+      headers: headersRecord as HeadersInit,
       body,
     })
     
