@@ -54,6 +54,8 @@ class BankConfig(BaseSettings):
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        # Игнорируем переменные которые не определены в классе (например, NEXT_PUBLIC_* для фронтенда)
+        extra = "ignore"
 
 
 # Singleton instance

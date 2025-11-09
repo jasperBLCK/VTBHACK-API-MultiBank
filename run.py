@@ -21,19 +21,21 @@ if __name__ == "__main__":
     port_map = {
         "vbank": 8001,
         "abank": 8002,
-        "sbank": 8003
+        "sbank": 8003,
+        "mybank": 8001,  # Для команды team251
     }
-    port = port_map.get(config.BANK_CODE, 8000)
+    port = port_map.get(config.BANK_CODE, 8001)  # По умолчанию 8001
     
     print(f"🏦 Starting {config.BANK_NAME} on port {port}")
     print(f"📍 Swagger UI: http://localhost:{port}/docs")
     print(f"📍 Client UI: http://localhost:{port}/client/")
+    print(f"📍 FrontendN: http://localhost:3000 (запустите отдельно: cd FrontendN && npm run dev)")
     
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=port,
-        reload=True,
+        reload=False,
         log_level="info"
     )
 

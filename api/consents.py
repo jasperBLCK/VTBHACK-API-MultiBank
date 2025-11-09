@@ -18,6 +18,7 @@ OpenBanking Russia v2.1 compatible
 from fastapi import APIRouter, Depends, HTTPException, Header
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
+import asyncio
 from sqlalchemy import select, and_
 from typing import Optional, List
 from datetime import datetime, timedelta
@@ -124,12 +125,14 @@ async def request_consent(
             }
         else:
             # Требуется одобрение
+            
             return {
                 "request_id": consent_request.request_id,
                 "status": "pending",
                 "message": "Запрос отправлен на одобрение",
                 "created_at": consent_request.created_at.isoformat(),
                 "auto_approved": False
+                
             }
         
     except ValueError as e:

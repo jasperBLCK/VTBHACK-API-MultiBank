@@ -1,0 +1,139 @@
+// Prisma schema для мультибанка (PostgreSQL версия)
+// Используйте эту схему для продакшена
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Пользователь
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Связи
+  bankConnections BankConnection[]
+  accounts        Account[]
+  transactions    Transaction[]
+  settings        UserSettings?
+  notifications   Notification[]
+
+  @@map("users")
+}
+
+// Подключения к банкам
+model BankConnection {
+  id        String   @id @default(cuid())
+  userId    String
+  bankName  String   // ВТБ, Сбербанк, Альфа-Банк и т.д.
+  bankId    String   // Уникальный идентификатор банка
+  accessToken String @db.Text // Зашифрованный токен доступа
+  refreshToken String? @db.Text // Refresh token если доступен
+  expiresAt DateTime? // Время истечения токена
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Связи
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accounts Account[]
+
+  @@unique([userId, bankId])
+  @@map("bank_connections")
+}
+
+// Банковские счета
+model Account {
+  id            String   @id @default(cuid())
+  userId        String
+  bankConnectionId String?
+  bankName      String
+  accountNumber String
+  balance       Decimal  @default(0) @db.Decimal(15, 2)
+  currency      String   @default("RUB")
+  type          String   // debit, credit, savings и т.д.
+  lastSyncedAt  DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Связи
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bankConnection BankConnection? @relation(fields: [bankConnectionId], references: [id], onDelete: SetNull)
+  transactions  Transaction[]
+
+  @@index([userId])
+  @@index([bankConnectionId])
+  @@map("accounts")
+}
+
+// Транзакции
+model Transaction {
+  id          String   @id @default(cuid())
+  userId      String
+  accountId   String
+  amount      Decimal  @db.Decimal(15, 2)
+  currency    String   @default("RUB")
+  description String?
+  category    String   @default("other") // income, expense, transfer, other
+  type        String?  // transfer, payment, income и т.д.
+  date        DateTime
+  toAccountId String?  // Для переводов
+  metadata    Json?    // Дополнительные данные
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Связи
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([accountId])
+  @@index([date])
+  @@map("transactions")
+}
+
+// Настройки пользователя
+model UserSettings {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  theme     String   @default("light") // light, dark
+  language  String   @default("ru")
+  currency  String   @default("RUB")
+  notificationsEnabled Boolean @default(true)
+  autoSync  Boolean  @default(true)
+  syncInterval Int   @default(3600) // Интервал синхронизации в секундах
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Связи
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+// Уведомления
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // success, error, info, warning
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  // Связи
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}
+

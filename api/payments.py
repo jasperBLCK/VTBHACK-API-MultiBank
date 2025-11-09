@@ -13,7 +13,7 @@ from decimal import Decimal
 import uuid
 
 from database import get_db
-from models import Payment, Account, PaymentConsent
+from models import Payment, Account, PaymentConsent, Transaction, Client
 from services.auth_service import get_current_client
 from services.payment_service import PaymentService
 
@@ -80,144 +80,35 @@ async def create_payment(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    ## 💸 Создание платежа (разовый перевод)
-    
-    **OpenBanking Russia Payments API**
-    
-    ### Два типа платежей:
-    
-    #### 1️⃣ Внутрибанковский перевод (тот же банк)
-    ```json
-    {
-      "data": {
-        "initiation": {
-          "instructedAmount": {
-            "amount": "1000.00",
-            "currency": "RUB"
-          },
-          "debtorAccount": {
-            "schemeName": "RU.CBR.PAN",
-            "identification": "40817810099910004312"
-          },
-          "creditorAccount": {
-            "schemeName": "RU.CBR.PAN",
-            "identification": "40817810099910005423"
-          }
-        }
-      }
-    }
-    ```
-    
-    #### 2️⃣ Межбанковский перевод
-    Добавьте в `creditorAccount`:
-    ```json
-    {
-      "creditorAccount": {
-        "identification": "40817810099910001234",
-        "bank_code": "abank"  // Код банка получателя
-      }
-    }
-    ```
-    
-    ### Статусы платежа:
-    - `pending` — ожидает обработки
-    - `completed` — успешно выполнен
-    - `failed` — ошибка (недостаточно средств, счет не найден)
-    
-    ### Проверка статуса:
-    ```bash
-    GET /payments/{payment_id}
-    ```
-    
-    ### ⚠️ Важно:
-    - Проверяйте баланс счета перед платежом: `GET /accounts/{account_id}/balances`
-    - Счет списания (`debtorAccount`) должен принадлежать авторизованному клиенту
-    - Для межбанковых переводов используйте правильный `bank_code`
-    - Коды банков: `vbank`, `abank`, `sbank`
-    
-    ### Sandbox особенности:
-    - Межбанковые переводы выполняются мгновенно
-    - Комиссия не взимается
-    - Все валюты конвертируются по курсу 1:1 для упрощения
+    Создать платеж (инициация). Делегирует в PaymentService.
     """
     if not current_client:
         raise HTTPException(401, "Unauthorized")
-    
-    # Проверка согласия для межбанковых запросов
-    payment_consent_id_to_store = None
-    if x_requesting_bank:
-        # Межбанковый запрос - требуется согласие на платеж
-        if not x_payment_consent_id:
-            raise HTTPException(
-                403,
-                detail={
-                    "error": "PAYMENT_CONSENT_REQUIRED",
-                    "message": "Требуется согласие клиента на платеж",
-                    "consent_request_url": "/payment-consents/request"
-                }
-            )
-        
-        # Проверить согласие
-        consent_result = await db.execute(
-            select(PaymentConsent).where(
-                and_(
-                    PaymentConsent.consent_id == x_payment_consent_id,
-                    PaymentConsent.status == "active",
-                    PaymentConsent.expiration_date_time > datetime.utcnow()
-                )
-            )
-        )
-        payment_consent = consent_result.scalar_one_or_none()
-        
-        if not payment_consent:
-            raise HTTPException(
-                403,
-                detail={
-                    "error": "INVALID_CONSENT",
-                    "message": "Согласие недействительно, истекло или уже использовано"
-                }
-            )
-        
-        # Проверить что согласие выдано запрашивающему банку
-        if payment_consent.granted_to != x_requesting_bank:
-            raise HTTPException(
-                403,
-                detail={
-                    "error": "CONSENT_MISMATCH",
-                    "message": "Согласие выдано другому банку"
-                }
-            )
-        
-        payment_consent_id_to_store = x_payment_consent_id
-    
-    # Извлечь данные из request
+
     initiation = request.data.get("initiation")
     if not initiation:
         raise HTTPException(400, "Missing initiation data")
-    
+
     amount_data = initiation.get("instructedAmount", {})
     debtor_account = initiation.get("debtorAccount", {})
     creditor_account = initiation.get("creditorAccount", {})
-    
-    # Описание платежа
     remittance = initiation.get("remittanceInformation", {})
     description = remittance.get("unstructured", "") if remittance else ""
-    
+
     try:
-        # Инициировать платеж
         payment, interbank = await PaymentService.initiate_payment(
             db=db,
             from_account_number=debtor_account.get("identification"),
             to_account_number=creditor_account.get("identification"),
             amount=Decimal(amount_data.get("amount", "0")),
             description=description,
-            payment_consent_id=payment_consent_id_to_store
+            payment_consent_id=x_payment_consent_id
         )
-        
+
         # Если использовалось согласие - пометить его как использованное
-        if payment_consent_id_to_store:
+        if x_payment_consent_id:
             consent_result = await db.execute(
-                select(PaymentConsent).where(PaymentConsent.consent_id == payment_consent_id_to_store)
+                select(PaymentConsent).where(PaymentConsent.consent_id == x_payment_consent_id)
             )
             consent = consent_result.scalar_one_or_none()
             if consent:
@@ -225,25 +116,21 @@ async def create_payment(
                 consent.used_at = datetime.utcnow()
                 consent.status_update_date_time = datetime.utcnow()
                 await db.commit()
-        
-        # Формируем ответ OpenBanking Russia
-        now = datetime.utcnow()
-        
+
         payment_data = PaymentData(
             paymentId=payment.payment_id,
             status=payment.status,
             creationDateTime=payment.creation_date_time.isoformat() + "Z",
             statusUpdateDateTime=payment.status_update_date_time.isoformat() + "Z"
         )
-        
+
         return PaymentResponse(
             data=payment_data,
-            links={
-                "self": f"/payments/{payment.payment_id}"
-            },
+            links={"self": f"/payments/{payment.payment_id}"},
             meta={}
         )
-        
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     except ValueError as e:
         raise HTTPException(400, str(e))
 
@@ -284,4 +171,189 @@ async def get_payment(
             "self": f"/payments/{payment_id}"
         }
     )
+
+
+# === Simple Transfer Endpoint (for internal transfers) ===
+
+class SimpleTransferRequest(BaseModel):
+    """Простой запрос на перевод между своими счетами"""
+    from_account_id: str = Field(..., description="ID счета-отправителя")
+    to_account_id: str = Field(..., description="ID счета-получателя")
+    amount: str = Field(..., description="Сумма перевода")
+    description: Optional[str] = None
+
+
+class SimpleTransferResponse(BaseModel):
+    """Ответ на перевод"""
+    success: bool
+    transfer_id: str
+    message: str
+
+
+@router.post("/transfer/internal", response_model=SimpleTransferResponse, status_code=201, summary="Перевод между своими счетами")
+async def transfer_internal(
+    request: SimpleTransferRequest,
+    current_client: dict = Depends(get_current_client),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Простой перевод между счетами одного клиента
+    
+    **Требования:**
+    - Оба счета должны принадлежать текущему клиенту
+    - Достаточно средств на счете-отправителе
+    - Сумма > 0
+    """
+    
+    if not current_client:
+        raise HTTPException(401, "Unauthorized")
+    
+    import logging
+    logger = logging.getLogger(__name__)
+
+    try:
+        # Получаем клиента
+        client_result = await db.execute(
+            select(Client).where(Client.person_id == current_client["client_id"])
+        )
+        client = client_result.scalar_one_or_none()
+
+        if not client:
+            raise HTTPException(401, "Client not found")
+
+        # Попробуем разрешить переданные идентификаторы в нескольких форматах:
+        # - числовой id (1, "1")
+        # - со схемой "acc-<id>"
+        # - account_number (строка)
+
+        def resolve_candidate(candidate: str):
+            # Возвращает tuple (by_id:int or None, by_number:str or None)
+            if candidate is None:
+                return (None, None)
+            s = str(candidate)
+            if s.startswith('acc-'):
+                s = s.replace('acc-', '')
+            # Попытка преобразовать в int
+            try:
+                return (int(s), None)
+            except Exception:
+                return (None, s)
+
+        from_id_candidate, from_number_candidate = resolve_candidate(request.from_account_id)
+        to_id_candidate, to_number_candidate = resolve_candidate(request.to_account_id)
+
+        from_account = None
+        to_account = None
+
+        # Сначала пытаемся по id
+        if from_id_candidate is not None:
+            from_result = await db.execute(
+                select(Account).where(and_(Account.id == from_id_candidate, Account.client_id == client.id))
+            )
+            from_account = from_result.scalar_one_or_none()
+
+        if not from_account and from_number_candidate:
+            from_result = await db.execute(
+                select(Account).where(and_(Account.account_number == from_number_candidate, Account.client_id == client.id))
+            )
+            from_account = from_result.scalar_one_or_none()
+
+        if to_id_candidate is not None:
+            to_result = await db.execute(
+                select(Account).where(and_(Account.id == to_id_candidate, Account.client_id == client.id))
+            )
+            to_account = to_result.scalar_one_or_none()
+
+        if not to_account and to_number_candidate:
+            to_result = await db.execute(
+                select(Account).where(and_(Account.account_number == to_number_candidate, Account.client_id == client.id))
+            )
+            to_account = to_result.scalar_one_or_none()
+
+        if not from_account:
+            raise HTTPException(404, "From account not found or not yours")
+
+        if not to_account:
+            raise HTTPException(404, "To account not found or not yours")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("transfer_internal failed during lookup")
+        raise HTTPException(500, f"Internal error resolving accounts: {str(e)}")
+    
+    try:
+        if from_account.id == to_account.id:
+            raise HTTPException(400, "Cannot transfer to the same account")
+
+        # Проверяем сумму
+        try:
+            amount = Decimal(request.amount)
+        except Exception:
+            raise HTTPException(400, "Invalid amount format")
+
+        if amount <= 0:
+            raise HTTPException(400, "Amount must be greater than 0")
+
+        if from_account.balance < amount:
+            raise HTTPException(400, "Insufficient funds")
+
+        # Выполняем перевод
+        transfer_id = f"transfer-{uuid.uuid4().hex[:12]}"
+
+        # Обновляем балансы
+        from_account.balance = from_account.balance - amount
+        to_account.balance = to_account.balance + amount
+
+        # Создаем транзакции
+        debit_tx = Transaction(
+            account_id=from_account.id,
+            transaction_id=f"tx-{uuid.uuid4().hex[:12]}",
+            amount=amount,
+            direction="debit",
+            counterparty=to_account.account_number,
+            description=request.description or f"Перевод на {to_account.account_number}"
+        )
+        db.add(debit_tx)
+
+        credit_tx = Transaction(
+            account_id=to_account.id,
+            transaction_id=f"tx-{uuid.uuid4().hex[:12]}",
+            amount=amount,
+            direction="credit",
+            counterparty=from_account.account_number,
+            description=request.description or f"Перевод с {from_account.account_number}"
+        )
+        db.add(credit_tx)
+
+        # Создаем платеж для отслеживания (используем поля, определенные в модели Payment)
+        payment = Payment(
+            payment_id=transfer_id,
+            account_id=from_account.id,
+            payment_consent_id=None,
+            amount=amount,
+            currency=from_account.currency or "RUB",
+            destination_account=to_account.account_number,
+            destination_bank=None,
+            description=request.description or "Internal transfer",
+            status="AcceptedSettlementCompleted",
+            creation_date_time=datetime.utcnow(),
+            status_update_date_time=datetime.utcnow()
+        )
+        db.add(payment)
+
+        await db.commit()
+
+        logger.info(f"Internal transfer: {from_account.account_number} -> {to_account.account_number}, amount={amount}")
+
+        return SimpleTransferResponse(
+            success=True,
+            transfer_id=transfer_id,
+            message=f"Transfer of {amount} RUB completed successfully"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("transfer_internal failed during execution")
+        # Если commit не выполнен, откат будет выполнен при закрытии сессии/контексте
+        raise HTTPException(500, f"Internal error performing transfer: {str(e)}")
 

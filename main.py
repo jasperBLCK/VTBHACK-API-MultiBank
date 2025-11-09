@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
@@ -19,7 +20,7 @@ try:
         accounts, auth, consents, payments, admin, products, well_known, 
         banker, product_agreements, product_agreement_consents,
         product_applications, customer_leads, product_offers, product_offer_consents,
-        vrp_consents, vrp_payments, interbank, payment_consents
+        vrp_consents, vrp_payments, interbank, payment_consents, multibank_proxy
     )
 except ImportError:
     # Абсолютный импорт (для прямого запуска)
@@ -76,6 +77,24 @@ app = FastAPI(
     docs_url=None  # Отключаем автоматическую генерацию /docs
 )
 
+# Global exception handler to ensure JSON responses on unexpected errors
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    """Возвращает JSON вместо HTML при необработанных исключениях — помогает фронтенду не получать HTML ошибки."""
+    import logging, traceback
+    logger = logging.getLogger(__name__)
+    tb = traceback.format_exc()
+    logger.error(f"Unhandled exception at {request.url.path}: {tb}")
+    # Return a concise JSON response (include truncated traceback for debugging)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": "Internal Server Error",
+            "error": str(exc),
+            "trace": tb.splitlines()[-10:]
+        },
+    )
+
 # CORS - разрешить запросы между всеми банками
 # Для мультибанковых приложений нужно разрешить cross-origin запросы
 allowed_origins = [
@@ -83,7 +102,8 @@ allowed_origins = [
     "http://localhost:8002",  # ABank (dev)
     "http://localhost:8003",  # SBank (dev)
     "http://localhost",       # Прокси (dev)
-    "http://localhost:3000",  # Directory (dev)
+    "http://localhost:3000",  # Directory (dev) + Next.js FrontendN
+    "http://localhost:3001",  # Next.js FrontendN (альтернативный порт)
     "https://vbank.open.bankingapi.ru",  # VBank (prod)
     "https://abank.open.bankingapi.ru",  # ABank (prod)
     "https://sbank.open.bankingapi.ru",  # SBank (prod)
