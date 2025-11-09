@@ -55,15 +55,22 @@
 
 ## 🚀 Быстрый старт
 
-### Вариант 1: 🐳 Docker (Рекомендуется)
+### Вариант 1:  (вручную)
 
 ```bash
 # 1. Клонируем репозиторий
 git clone https://github.com/jasperBLCK/VTBHACK-API-MultiBank.git
 cd VTBHACK-API-MultiBank
 
-# 2. Запускаем всё одной командой
-docker-compose up -d
+#1. Запуск Backend
+python run.py
+
+
+# 2. Запускаем Frontend
+
+cd FrontendN
+npm install
+npm run dev
 
 # 3. Открываем приложение
 open http://localhost:3000
