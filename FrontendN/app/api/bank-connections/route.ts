@@ -10,7 +10,7 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
     })
 
-    return NextResponse.json(connections.map(c => ({
+    return NextResponse.json(connections.map((c: any) => ({
       id: c.id,
       bankId: c.bankId,
       bankName: c.bankName,
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Создаем подключение и счет в одной транзакции
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       let connection
 
       if (existingConnection && !existingConnection.isActive) {
