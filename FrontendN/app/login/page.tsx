@@ -79,10 +79,20 @@ export default function LoginPage() {
 
   const handleRandomLogin = () => {
     const testClients = [
-      { username: 'team251-1', password: '***REMOVED***' },
+      // Команда team251 (основная)
+      { username: 'team251-1', password: 'password' },
+      { username: 'team251-2', password: 'password' },
+      { username: 'team251-3', password: 'password' },
+      { username: 'team251-4', password: 'password' },
+      { username: 'team251-5', password: 'password' },
+      // Команда team200 (совместимость)
       { username: 'team200-1', password: 'password' },
       { username: 'team200-2', password: 'password' },
+      { username: 'team200-3', password: 'password' },
+      // Demo клиенты
       { username: 'demo-client-001', password: 'password' },
+      { username: 'demo-client-002', password: 'password' },
+      { username: 'demo-client-003', password: 'password' },
     ]
     const randomClient = testClients[Math.floor(Math.random() * testClients.length)]
     setUsername(randomClient.username)
@@ -123,7 +133,7 @@ export default function LoginPage() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="team200-1"
+              placeholder="team251-1"
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
@@ -160,24 +170,16 @@ export default function LoginPage() {
 
           <button
             type="button"
-            onClick={handleRandomLogin}
-            className="w-full bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+            onClick={() => {
+              setUsername('team251-1')
+              setPassword('password')
+            }}
+            className="w-full bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors"
           >
-            🎲 Войти как случайный клиент
+            🎯 Быстрый вход team251-1
           </button>
 
-          <div className="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-600">
-            <div className="font-semibold mb-2">Тестовые клиенты:</div>
-            <div className="space-y-1">
-              <div><strong>Команда team251:</strong> team251-1, team251-2, team251-3...</div>
-              <div><strong>Команда team200:</strong> team200-1, team200-2, team200-3...</div>
-              <div><strong>Demo клиенты:</strong> demo-client-001, demo-client-002, demo-client-003</div>
-              <div className="mt-2">
-                <div>Пароль для team251: <code className="bg-gray-100 px-1 rounded">***REMOVED***</code></div>
-                <div>Пароль для остальных: <code className="bg-gray-100 px-1 rounded">password</code></div>
-              </div>
-            </div>
-          </div>
+
         </form>
       </div>
     </div>

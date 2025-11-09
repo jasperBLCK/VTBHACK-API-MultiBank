@@ -38,30 +38,32 @@ async def login(
     
     ⚠️ **Для встроенного UI банка, НЕ для внешних приложений**
     
-    Этот endpoint используется клиентским интерфейсом банка для входа пользователя.
-    Внешние приложения должны использовать стандартный OAuth 2.0 flow.
+    **Тестовые данные для входа:**
+    - Username: team251-1, team251-2, ... team251-10
+    - Password: password
     
     **Пример:**
     ```json
     {
-      "username": "cli-vb-001",
+      "username": "team251-1",
       "password": "password"
     }
     ```
     
     **Ответ:**
     - `access_token` — JWT токен (валиден 24 часа)
-    - `token_type` — "bearer"
+    - `token_type` — "bearer"  
     - `client_id` — ID клиента
-    
-    Используйте токен в заголовке: `Authorization: Bearer <token>`
     """
+    
+    print(f"🔐 Login attempt: username={request.username}, password={'*' * len(request.password)}")
     
     # Найти клиента
     result = await db.execute(
         select(Client).where(Client.person_id == request.username)
     )
     client = result.scalar_one_or_none()
+    print(f"📊 Client found in DB: {client is not None}")
     
     # Если клиент не найден, но это команда team251 - создаем клиента автоматически
     if not client and request.username.startswith("team"):
@@ -114,47 +116,17 @@ async def login(
     # В MVP: простая проверка пароля (для упрощения тестирования)
     # В production: проверять хешированный пароль
     
-    # Определяем правильный пароль для клиента
-    expected_password = None
+    # Упрощенная проверка пароля для демо
+    print(f"🔑 Password check: provided='{request.password}', expected='password'")
     
-    if request.username.startswith("demo-"):
-        # Demo клиенты: пароль = "password"
-        expected_password = "password"
-    elif request.username.startswith("team"):
-        # Командные клиенты: проверяем пароль из таблицы teams
-        # Извлекаем номер команды из person_id (team010-1 → team010)
-        import re
-        match = re.match(r'(team\d+)-\d+', request.username)
-        if match:
-            team_id = match.group(1)
-            
-            # Ищем команду в БД
-            team_result = await db.execute(
-                select(Team).where(Team.client_id == team_id)
-            )
-            team = team_result.scalar_one_or_none()
-            
-            if team:
-                # Используем client_secret из таблицы teams как пароль
-                expected_password = team.client_secret
-            else:
-                # Команда не найдена в БД - используем секрет из конфига для team251
-                if team_id == config.TEAM_CLIENT_ID and config.TEAM_CLIENT_SECRET:
-                    expected_password = config.TEAM_CLIENT_SECRET
-                else:
-                    # Fallback для других команд
-                    expected_password = "password"
-        else:
-            # Неправильный формат - используем fallback
-            expected_password = "password"
-    else:
-        # Старые клиенты: пароль = username или "password"
-        if request.password in [request.username, "password"]:
-            expected_password = request.password
+    # Для всех пользователей используем пароль "password"
+    if request.password != "password":
+        # Дополнительная проверка для старых клиентов  
+        if not (request.username.startswith("cli-") and request.password == request.username):
+            print(f"❌ Authentication failed for {request.username}")
+            raise HTTPException(401, "Invalid credentials")
     
-    # Проверка пароля
-    if not expected_password or request.password != expected_password:
-        raise HTTPException(401, "Invalid credentials")
+    print(f"✅ Authentication successful for {request.username}")
     
     # Создать JWT токен
     access_token = create_access_token(
