@@ -2,59 +2,135 @@ version: '3.8'
 
 services:
   # PostgreSQL Database
-  db:
-    image: postgres:15-alpine
-    container_name: mybank-db
+  postgres:
+    image: postgres:16
+    container_name: multibank-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ansar09595}
-      POSTGRES_DB: ${POSTGRES_DB:-vtbhack_db}
+      POSTGRES_USER: multibank
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: multibank
+      POSTGRES_INITDB_ARGS: "--auth-host=md5"
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./shared/database:/docker-entrypoint-initdb.d
-    # ports:
-    #   - "5434:5432"
+      - ./shared/database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    networks:
+      - multibank-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD-SHELL", "pg_isready -U multibank -d multibank"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Bank API
-  bank:
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: multibank-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - multibank-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # FastAPI Backend
+  backend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: mybank-api
+    container_name: multibank-backend
     environment:
-      BANK_CODE: ${BANK_CODE:-mybank}
-      BANK_NAME: ${BANK_NAME:-My Awesome Bank}
-      BANK_DESCRIPTION: ${BANK_DESCRIPTION:-Custom bank for hackathon}
-      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8080}
-      TEAM_CLIENT_ID: ${TEAM_CLIENT_ID:-}
-      TEAM_CLIENT_SECRET: ${TEAM_CLIENT_SECRET:-}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ansar09595}
-      POSTGRES_DB: ${POSTGRES_DB:-vtbhack_db}
-      POSTGRES_HOST: db
+      # Database
+      POSTGRES_USER: multibank
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: multibank
+      POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-ansar09595}@db:5432/${POSTGRES_DB:-vtbhack_db}
-      SECRET_KEY: ${SECRET_KEY:-change-this-to-random-string-in-production}
-      ALGORITHM: ${ALGORITHM:-HS256}
-      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
-      API_VERSION: ${API_VERSION:-2.1}
-      REGISTRY_URL: ${REGISTRY_URL:-http://localhost:3000}
+      DATABASE_URL: postgresql://multibank:password@postgres:5432/multibank
+      
+      # Redis
+      REDIS_URL: redis://redis:6379
+      
+      # Security
+      SECRET_KEY: "multibank-secret-key-for-hackathon-2025-vtb-api"
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+      
+      # Bank settings
+      BANK_CODE: multibank
+      BANK_NAME: "Мультибанк"
+      BANK_DESCRIPTION: "Единый интерфейс финансового сервиса"
+      PUBLIC_URL: http://localhost:8000
+      
+      # Team credentials
+      TEAM_CLIENT_ID: team251
+      TEAM_CLIENT_SECRET: iOin4bZP3rRl44r7TNy5ZigMUjcQIem1
+      
+      # API
+      API_VERSION: "2.1"
+      
     ports:
-      - "8080:8000"
+      - "8000:8000"
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
-    command: python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+      redis:
+        condition: service_healthy
+    networks:
+      - multibank-network
     volumes:
-      - ./shared/keys:/app/shared/keys:ro
-      - ./frontend:/app/frontend:ro
+      - ./shared:/app/shared
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./FrontendN
+      dockerfile: Dockerfile
+    container_name: multibank-frontend
+    environment:
+      # Backend API
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_BACKEND_URL: http://backend:8000
+      
+      # Database (для Prisma)
+      DATABASE_URL: "postgresql://multibank:password@postgres:5432/multibank?schema=public"
+      
+      # VTB API
+      NEXT_PUBLIC_VTB_API_URL: https://api.vtb.ru
+      NEXT_PUBLIC_VTB_CLIENT_ID: your_client_id
+      NEXT_PUBLIC_VTB_CLIENT_SECRET: your_client_secret
+      
+      # App settings
+      NODE_ENV: production
+      
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - multibank-network
     restart: unless-stopped
 
 volumes:
   postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  multibank-network:
+    driver: bridge
 

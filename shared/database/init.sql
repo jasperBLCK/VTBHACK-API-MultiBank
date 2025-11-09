@@ -98,6 +98,18 @@ CREATE TABLE IF NOT EXISTS teams (
 
 -- Клиенты команды team200 (для работы на хакатоне)
 INSERT INTO clients (person_id, client_type, full_name, segment, birth_year, monthly_income) VALUES
+-- Команда team251 (основная команда хакатона)
+('team251-1', 'individual', 'Участник команды №1', 'employee', 1995, 100000),
+('team251-2', 'individual', 'Участник команды №2', 'employee', 1994, 110000),
+('team251-3', 'individual', 'Участник команды №3', 'employee', 1993, 105000),
+('team251-4', 'individual', 'Участник команды №4', 'entrepreneur', 1992, 150000),
+('team251-5', 'individual', 'Участник команды №5', 'employee', 1996, 95000),
+('team251-6', 'individual', 'Участник команды №6', 'employee', 1997, 90000),
+('team251-7', 'individual', 'Участник команды №7', 'employee', 1991, 120000),
+('team251-8', 'individual', 'Участник команды №8', 'employee', 1998, 85000),
+('team251-9', 'individual', 'Участник команды №9', 'entrepreneur', 1990, 200000),
+('team251-10', 'individual', 'Участник команды №10', 'employee', 1999, 80000),
+-- Команда team200 (для совместимости)
 ('team200-1', 'individual', 'Участник команды №1', 'employee', 1995, 100000),
 ('team200-2', 'individual', 'Участник команды №2', 'employee', 1994, 110000),
 ('team200-3', 'individual', 'Участник команды №3', 'employee', 1993, 105000),
@@ -113,21 +125,32 @@ INSERT INTO clients (person_id, client_type, full_name, segment, birth_year, mon
 ('demo-client-002', 'individual', 'Демо клиент №2', 'employee', 1982, 150000),
 ('demo-client-003', 'individual', 'Демо клиент №3', 'entrepreneur', 1975, 200000);
 
--- Счета для команды team200
+-- Счета для команды team251 (основная команда)
 INSERT INTO accounts (client_id, account_number, account_type, balance, currency, status) VALUES
-(1, '40817810200000000001', 'checking', 500000.00, 'RUB', 'active'),
-(2, '40817810200000000002', 'checking', 450000.00, 'RUB', 'active'),
-(3, '40817810200000000003', 'checking', 480000.00, 'RUB', 'active'),
-(4, '40817810200000000004', 'checking', 600000.00, 'RUB', 'active'),
-(5, '40817810200000000005', 'checking', 350000.00, 'RUB', 'active'),
-(6, '40817810200000000006', 'checking', 320000.00, 'RUB', 'active'),
-(7, '40817810200000000007', 'checking', 550000.00, 'RUB', 'active'),
-(8, '40817810200000000008', 'checking', 280000.00, 'RUB', 'active'),
-(9, '40817810200000000009', 'checking', 750000.00, 'RUB', 'active'),
-(10, '40817810200000000010', 'checking', 420000.00, 'RUB', 'active'),
+(1, '40817810251000000001', 'checking', 500000.00, 'RUB', 'active'),
+(2, '40817810251000000002', 'checking', 450000.00, 'RUB', 'active'),
+(3, '40817810251000000003', 'checking', 480000.00, 'RUB', 'active'),
+(4, '40817810251000000004', 'checking', 600000.00, 'RUB', 'active'),
+(5, '40817810251000000005', 'checking', 350000.00, 'RUB', 'active'),
+(6, '40817810251000000006', 'checking', 320000.00, 'RUB', 'active'),
+(7, '40817810251000000007', 'checking', 550000.00, 'RUB', 'active'),
+(8, '40817810251000000008', 'checking', 280000.00, 'RUB', 'active'),
+(9, '40817810251000000009', 'checking', 750000.00, 'RUB', 'active'),
+(10, '40817810251000000010', 'checking', 420000.00, 'RUB', 'active'),
+-- Счета для команды team200 (совместимость)
+(11, '40817810200000000001', 'checking', 500000.00, 'RUB', 'active'),
+(12, '40817810200000000002', 'checking', 450000.00, 'RUB', 'active'),
+(13, '40817810200000000003', 'checking', 480000.00, 'RUB', 'active'),
+(14, '40817810200000000004', 'checking', 600000.00, 'RUB', 'active'),
+(15, '40817810200000000005', 'checking', 350000.00, 'RUB', 'active'),
+(16, '40817810200000000006', 'checking', 320000.00, 'RUB', 'active'),
+(17, '40817810200000000007', 'checking', 550000.00, 'RUB', 'active'),
+(18, '40817810200000000008', 'checking', 280000.00, 'RUB', 'active'),
+(19, '40817810200000000009', 'checking', 750000.00, 'RUB', 'active'),
+(20, '40817810200000000010', 'checking', 420000.00, 'RUB', 'active'),
 -- Demo счета
-(11, '40817810099920011001', 'checking', 320000.00, 'RUB', 'active'),
-(12, '40817810099920012001', 'checking', 450000.50, 'RUB', 'active'),
+(21, '40817810099920011001', 'checking', 320000.00, 'RUB', 'active'),
+(22, '40817810099920012001', 'checking', 450000.50, 'RUB', 'active'),
 (13, '40817810099920013001', 'checking', 550000.75, 'RUB', 'active');
 
 -- Транзакции для team200
@@ -213,7 +236,8 @@ INSERT INTO bank_settings (key, value) VALUES
 ('auto_approve_consents', 'true')
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
--- Команда team200 (пример для документации)
+-- Команда team251 (основная команда для хакатона)
 INSERT INTO teams (client_id, client_secret, team_name, is_active) VALUES 
+('team251', 'password', 'Команда 251 (jasperBLCK)', true),
 ('team200', '5OAaa4DYzYKfnOU6zbR34ic5qMm7VSMB', 'Команда 200 (пример)', true)
 ON CONFLICT (client_id) DO NOTHING;
