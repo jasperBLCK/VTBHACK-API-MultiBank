@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  height: 100%;
+  /* Фон по умолчанию определяется скриптом в layout.tsx */
+  /* По умолчанию темный, чтобы избежать белой вспышки для темной темы */
+  background-color: #111827;
+}
+
+/* Светлая тема - когда класс dark отсутствует */
+html:not(.dark) {
+  background-color: #f9fafb;
+  color-scheme: light;
+}
+
+body {
+  min-height: 100%;
+  height: 100%;
+  color: #111827; /* text-gray-900 */
+  background: #f9fafb; /* bg-gray-50 */
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+/* Тёмная тема */
+.dark body {
+  color: #f9fafb; /* text-gray-50 */
+  background: #111827; /* bg-gray-900 */
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+/* Предотвращаем белую вспышку - если система в темной теме, применяем темный фон */
+@media (prefers-color-scheme: dark) {
+  html:not(.light) {
+    background-color: #111827;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Улучшение рендеринга текста */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body, html {
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1;
+  font-kerning: normal;
+}

@@ -1,0 +1,64 @@
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# IDE / editor folders
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python caches and artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.pyo
+*.pyd
+*.pdb
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+.env.*
+
+# Test and coverage outputs
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+
+# Database files & local secrets
+*.db
+*.db-journal
+*.sqlite*
+shared/keys/
+
+# Node / frontend artifacts
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Next.js / React build outputs
+.next/
+out/
+.vercel/
+
+# Docker / compose
+*.log
+docker-data/
+
+# Prisma migrations generated locally
+prisma/migrations/
+
