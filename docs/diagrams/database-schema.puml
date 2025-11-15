@@ -1,0 +1,207 @@
+@startuml database-schema
+!theme plain
+skinparam linetype ortho
+skinparam rectangle {
+    BackgroundColor<<core>> #E3F2FD
+    BackgroundColor<<consent>> #FFF3E0
+    BackgroundColor<<payment>> #F3E5F5
+    BackgroundColor<<product>> #E8F5E9
+    BackgroundColor<<system>> #FAFAFA
+    BorderColor #424242
+    FontSize 11
+}
+
+' Основные таблицы клиентов
+package "Клиенты и счета" <<core>> {
+    entity "clients" as clients {
+        **id** : SERIAL
+        --
+        person_id : VARCHAR(100) UK
+        client_type : VARCHAR(20)
+        full_name : VARCHAR(255)
+        segment : VARCHAR(50)
+        birth_year : INTEGER
+        monthly_income : NUMERIC
+        created_at : TIMESTAMP
+    }
+
+    entity "accounts" as accounts {
+        **id** : SERIAL
+        --
+        client_id : INTEGER FK
+        account_number : VARCHAR(20) UK
+        account_type : VARCHAR(50)
+        balance : NUMERIC(15,2)
+        currency : VARCHAR(3)
+        status : VARCHAR(20)
+        opened_at : TIMESTAMP
+    }
+
+    entity "transactions" as transactions {
+        **id** : SERIAL
+        --
+        account_id : INTEGER FK
+        transaction_id : VARCHAR(100) UK
+        amount : NUMERIC(15,2)
+        direction : VARCHAR(10)
+        counterparty : VARCHAR(255)
+        description : TEXT
+        transaction_date : TIMESTAMP
+    }
+}
+
+' Платежи и переводы
+package "Платежи и переводы" <<payment>> {
+    entity "payments" as payments {
+        **id** : SERIAL
+        --
+        payment_id : VARCHAR(100) UK
+        payment_consent_id : VARCHAR(100)
+        account_id : INTEGER FK
+        amount : NUMERIC(15,2)
+        currency : VARCHAR(3)
+        destination_account : VARCHAR(255)
+        destination_bank : VARCHAR(100)
+        status : VARCHAR(50)
+        creation_date_time : TIMESTAMP
+    }
+
+    entity "interbank_transfers" as interbank {
+        **id** : SERIAL
+        --
+        transfer_id : VARCHAR(100) UK
+        payment_id : VARCHAR(100) FK
+        from_bank : VARCHAR(100)
+        to_bank : VARCHAR(100)
+        amount : NUMERIC(15,2)
+        status : VARCHAR(50)
+        created_at : TIMESTAMP
+    }
+}
+
+' Согласия
+package "Согласия (Consents)" <<consent>> {
+    entity "consent_requests" as consent_req {
+        **id** : SERIAL
+        --
+        request_id : VARCHAR(100) UK
+        client_id : INTEGER FK
+        requesting_bank : VARCHAR(100)
+        permissions : TEXT[]
+        status : VARCHAR(50)
+        created_at : TIMESTAMP
+    }
+
+    entity "consents" as consents {
+        **id** : SERIAL
+        --
+        consent_id : VARCHAR(100) UK
+        client_id : INTEGER FK
+        granted_to : VARCHAR(100)
+        permissions : TEXT[]
+        status : VARCHAR(50)
+        expiration_date_time : TIMESTAMP
+    }
+
+    entity "payment_consent_requests" as payment_consent_req {
+        **id** : SERIAL
+        --
+        request_id : VARCHAR(100) UK
+        client_id : INTEGER FK
+        requesting_bank : VARCHAR(100)
+        amount : NUMERIC(15,2)
+        status : VARCHAR(50)
+    }
+
+    entity "payment_consents" as payment_consents {
+        **id** : SERIAL
+        --
+        consent_id : VARCHAR(100) UK
+        client_id : INTEGER FK
+        granted_to : VARCHAR(100)
+        max_amount : NUMERIC(15,2)
+        status : VARCHAR(50)
+    }
+}
+
+' Продукты
+package "Продукты и договоры" <<product>> {
+    entity "products" as products {
+        **id** : SERIAL
+        --
+        product_id : VARCHAR(100) UK
+        product_type : VARCHAR(50)
+        name : VARCHAR(255)
+        interest_rate : NUMERIC(5,2)
+        min_amount : NUMERIC(15,2)
+        max_amount : NUMERIC(15,2)
+        term_months : INTEGER
+        is_active : BOOLEAN
+    }
+
+    entity "product_agreements" as agreements {
+        **id** : SERIAL
+        --
+        agreement_id : VARCHAR(100) UK
+        client_id : INTEGER FK
+        product_id : INTEGER FK
+        account_id : INTEGER FK
+        amount : NUMERIC(15,2)
+        status : VARCHAR(50)
+        start_date : TIMESTAMP
+        end_date : TIMESTAMP
+    }
+}
+
+' Системные таблицы
+package "Системные таблицы" <<system>> {
+    entity "teams" as teams {
+        **id** : SERIAL
+        --
+        client_id : VARCHAR(100) UK
+        client_secret : VARCHAR(255)
+        team_name : VARCHAR(255)
+        is_active : BOOLEAN
+        created_at : TIMESTAMP
+    }
+
+    entity "bank_capital" as capital {
+        **id** : SERIAL
+        --
+        bank_code : VARCHAR(100) UK
+        capital : NUMERIC(15,2)
+        initial_capital : NUMERIC(15,2)
+        total_deposits : NUMERIC(15,2)
+        total_loans : NUMERIC(15,2)
+        updated_at : TIMESTAMP
+    }
+
+    entity "notifications" as notifications {
+        **id** : SERIAL
+        --
+        client_id : INTEGER FK
+        type : VARCHAR(50)
+        message : TEXT
+        is_read : BOOLEAN
+        created_at : TIMESTAMP
+    }
+}
+
+' Основные связи
+clients ||--o{ accounts : "имеет"
+accounts ||--o{ transactions : "содержит"
+accounts ||--o{ payments : "инициирует"
+payments ||--o| interbank : "может быть"
+
+clients ||--o{ consent_req : "запрашивается для"
+clients ||--o{ consents : "дает"
+clients ||--o{ payment_consent_req : "запрашивается для"
+clients ||--o{ payment_consents : "дает"
+clients ||--o{ notifications : "получает"
+
+products ||--o{ agreements : "оформляется в"
+clients ||--o{ agreements : "заключает"
+accounts ||--o| agreements : "связан с"
+
+@enduml
+
