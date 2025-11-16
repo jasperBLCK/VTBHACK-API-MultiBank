@@ -6,7 +6,6 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=nextdotjs)](https://nextjs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=for-the-badge&logo=postgresql)](https://www.postgresql.org/)
-[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
 
 **Единое мультибанковское приложение с AI-ассистентом и глубоким OpenBanking стеком.**
 
@@ -16,7 +15,7 @@
 
 ## TL;DR
 - Один фронт для локальных и внешних счетов (FinScope + SBank/ABank/VBank).
-- Next.js 14 UI, FastAPI backend, PostgreSQL и Docker оркестрация.
+- Next.js 14 UI, FastAPI backend, PostgreSQL.
 - AI-ассистент MultiBank Copilot, который читает данные API и контент страницы.
 - Расширенный функционал по сравнению с шаблоном **Bank-in-a-Box**: аналитика, бюджеты, генерация карт, стеклянный login, демо сценарии хакатона.
 
