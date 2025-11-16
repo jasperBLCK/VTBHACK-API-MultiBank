@@ -405,5 +405,3 @@ kubectl apply -f k8s/service.yml
 # Настрой ingress
 kubectl apply -f k8s/ingress.yml
 ```
-
-## 🎉 Успехов на хакатоне!
