@@ -23,7 +23,7 @@ class BankConfig(BaseSettings):
     
     # === DATABASE ===
     POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "***REMOVED***"
+    POSTGRES_PASSWORD: str = "password"
     POSTGRES_DB: str = "vtbhack_db"
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
