@@ -4,6 +4,7 @@
 Создает команду team251 и клиента team251-1 с счетом
 """
 import asyncio
+import os
 from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +17,7 @@ async def create_account():
     """Создать учетную запись для входа"""
     
     TEAM_ID = "team251"
-    ORGANIZER_SECRET = "***REMOVED***"
+    ORGANIZER_SECRET = os.getenv("TEAM_CLIENT_SECRET", "")
     CLIENT_ID = "team251-1"
     
     async with AsyncSessionLocal() as session:

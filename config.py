@@ -19,7 +19,7 @@ class BankConfig(BaseSettings):
     # === TEAM CREDENTIALS (для межбанковских операций) ===
     # Эти креды используются для получения банковского токена при межбанковских запросах
     TEAM_CLIENT_ID: Optional[str] = "team251"  # ID команды для доступа к песочницам
-    TEAM_CLIENT_SECRET: Optional[str] = "***REMOVED***"  # Пароль команды
+    TEAM_CLIENT_SECRET: Optional[str] = None  # Пароль команды
     
     # === DATABASE ===
     POSTGRES_USER: str = "postgres"

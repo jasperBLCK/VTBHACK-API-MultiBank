@@ -18,7 +18,7 @@ router = APIRouter(prefix="/multibank", tags=["Internal: Multibank"], include_in
 # Не путать с client_id пользователя (например, "team251-1")
 # Эти креды используются для получения банковского токена от песочниц банков
 TEAM_CLIENT_ID = config.TEAM_CLIENT_ID or "team251"
-TEAM_CLIENT_SECRET = config.TEAM_CLIENT_SECRET or "***REMOVED***"
+TEAM_CLIENT_SECRET = config.TEAM_CLIENT_SECRET
 
 logger.info(f"Multibank API: TEAM_CLIENT_ID={TEAM_CLIENT_ID}, TEAM_CLIENT_SECRET={'*' * 10}")
 

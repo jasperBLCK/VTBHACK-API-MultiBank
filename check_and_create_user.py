@@ -3,6 +3,7 @@
 Запуск: python check_and_create_user.py
 """
 import asyncio
+import os
 import sys
 from pathlib import Path
 
@@ -21,7 +22,7 @@ async def check_and_create_user():
     
     TEAM_ID = "team251"
     CLIENT_ID = "team251-1"
-    TEAM_SECRET = "***REMOVED***"  # Из env.txt
+    TEAM_SECRET = os.getenv("TEAM_CLIENT_SECRET", "")  # Из env.txt
     
     async for db in get_db():
         try:

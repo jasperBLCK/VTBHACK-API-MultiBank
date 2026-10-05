@@ -70,7 +70,7 @@ services:
       
       # Team credentials
       TEAM_CLIENT_ID: team251
-      TEAM_CLIENT_SECRET: ***REMOVED***
+      TEAM_CLIENT_SECRET: ${TEAM_CLIENT_SECRET}
       
       # API
       API_VERSION: "2.1"
